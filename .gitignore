@@ -1,0 +1,97 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+.venv/
+ENV/
+.env
+env.bak/
+venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+dist/
+build/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg
+*.whl
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.pytest_cache/*
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDEs
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea/*
+# keep tasks.xml if you want to share run configurations: !.idea/tasks.xml
+
+# VS Code
+.vscode/
+
+# PostgreSQL
+# common data directory names and runtime files
+pgdata/
+postgres-data/
+data/
+*.pid
+*.log
+*.backup
+*.sql.gz
+# psql & postgres client history and password files
+.psql_history
+.pgpass
+
+# Logs and runtime files
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local settings
+local_settings.py
+
+# Secrets
+*.env
+.env.*
+
+# End of .gitignore
+
