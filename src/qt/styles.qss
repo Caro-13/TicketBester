@@ -1,0 +1,67 @@
+QMainWindow {
+    background-color: #1e1e2e;
+}
+QWidget {
+    color: #cdd6f4;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* --- Barre de menu --- */
+QMenuBar {
+    background-color: #11111b;
+    color: #cdd6f4;
+    border-bottom: 1px solid #313244;
+}
+QMenuBar::item:selected {
+    background-color: #313244;
+}
+QMenu {
+    background-color: #181825;
+    color: #cdd6f4;
+    border: 1px solid #313244;
+}
+QMenu::item:selected {
+    background-color: #313244;
+}
+
+/* --- Scrollbars modernes --- */
+QScrollBar:vertical {
+    border: none;
+    background-color: #11111b;
+    width: 10px;
+    margin: 0px 0px 0px 0px;
+}
+
+/* Le "bouton" qu'on déplace (Handle) */
+QScrollBar::handle:vertical {
+    background-color: #45475a;
+    min-height: 30px;
+    border-radius: 5px;
+    margin: 2px;
+}
+
+/* Interaction : Survol souris */
+QScrollBar::handle:vertical:hover {
+    background-color: #585b70; /* S'éclaire un peu */
+}
+
+/* Interaction : Clic maintenu */
+QScrollBar::handle:vertical:pressed {
+    background-color: #fab387; /* Devient Orange (couleur accent) */
+}
+
+QScrollBar::sub-line:vertical, QScrollBar::add-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+/* --- Barre de statut --- */
+QStatusBar {
+    background-color: #11111b;
+    color: #6c7086;
+}
