@@ -1,34 +1,48 @@
-import os
 import sys
+import os
 
-from PyQt6.QtWidgets import *
 from PyQt6.uic import loadUi
+from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
+from src.qt.home_widget import HomeWidget
 
-class TicketBester(QWidget):
+class TicketBester(QMainWindow):
 
     def __init__(self):
-        # Initialize the application
-        self.app = QApplication(sys.argv)
+        super().__init__()
 
-        # Load the UI file
-        ui_file_path = './qt/GUI.ui'
-        self.window = loadUi(ui_file_path)
+        ui_path = os.path.join(os.path.dirname(__file__), 'qt', 'GUI.ui')
 
-        # Connect signals and slots, customize UI, etc.
-        # (Add your customization code here)
+        # Chargement du fichier .ui dans la classe
+        loadUi(ui_path, self)
 
-        # Display the window
-        self.window.show()
+        self.setWindowTitle("TicketBester")
+
+        if self.centralwidget.layout() is None:
+            self.centralwidget.setLayout(QVBoxLayout())
+
+        # Home Widget
+        self.home_widget = HomeWidget(self)
+        self.centralwidget.layout().addWidget(self.home_widget)
 
     def run(self):
         # Start the event loop
         sys.exit(self.app.exec())
 
 def main():
-    # Create an instance of the application class and run it
-    my_app = TicketBester()
-    my_app.run()
+    app = QApplication(sys.argv)
+
+    style_path = os.path.join(os.path.dirname(__file__), 'qt', 'styles.qss')
+    try:
+        with open(style_path, "r") as f:
+            app.setStyleSheet(f.read())
+    except FileNotFoundError:
+        print(f"QSS file not found: ({style_path})")
+
+    window = TicketBester()
+    window.show()
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":
