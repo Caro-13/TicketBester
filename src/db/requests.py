@@ -13,3 +13,27 @@ def get_all_events():
     cursor.close()
     connection.close()
     return rows
+
+
+def get_all_events_with_names():
+    conn = _get_connection()
+    cur = conn.cursor()
+
+    query = """
+            SELECT t."name", e."date", e."hour"
+            FROM "event" e
+                     JOIN "typeOfEvent" t ON e."typeId" = t."id"
+            ORDER BY e."date" DESC \
+            """
+
+    try:
+        cur.execute(query)
+        rows = cur.fetchall()
+    except Exception as e:
+        print(f"SQL error: {e}")
+        rows = []
+    finally:
+        cur.close()
+        conn.close()
+
+    return rows
