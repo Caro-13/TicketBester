@@ -1,8 +1,8 @@
-from PyQt6.QtGui import QBrush
+from PyQt6.QtGui import (QBrush,QColor)
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QTableWidgetItem, QHeaderView, QLabel, QPushButton, QFrame, QAbstractItemView)
 from PyQt6.QtCore import Qt
-from PySide6.QtGui import QColor
+
 
 from src.db.requests import get_all_events_with_names
 from src.db.requests import get_all_events
