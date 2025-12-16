@@ -20,7 +20,7 @@ def get_all_events_with_names():
     cur = conn.cursor()
 
     query = """
-            SELECT t."name", e."date", e."hour"
+            SELECT e."name", t."name", e."date", e."hour"
             FROM "event" e
                      JOIN "typeOfEvent" t ON e."typeId" = t."id"
             ORDER BY e."date" DESC \
