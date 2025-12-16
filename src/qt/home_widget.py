@@ -2,8 +2,8 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QTableWidgetItem, QHeaderView, QLabel, QPushButton, QFrame, QAbstractItemView)
 from PyQt6.QtCore import Qt
 
-from db.requests import get_all_events_with_names
-from src.db.requests import get_all_events
+from src.db.requests import get_all_events_with_names
+
 
 
 class HomeWidget(QWidget):
@@ -110,11 +110,11 @@ class HomeWidget(QWidget):
         # TODO: Change this to get_all_events_with_names() when ready
         #data = get_all_events_with_names()
         # False data for demonstration purposes
-        data = [("Concert de Rock", "2024-07-15", "20:00"),
-            ("Exposition d'Art", "2024-08-01", "10:00"),
-            ("Festival de Jazz", "2024-09-10", "18:30"),
-            ("Conférence Tech", "2024-10-05", "09:00"),
-            ("Pièce de Théâtre", "2024-11-20", "19:30")]
+        data = [("Concert de Rock", "2026-07-15", "20:00"),
+            ("Exposition d'Art", "2026-08-01", "10:00"),
+            ("Festival de Jazz", "2026-09-10", "18:30"),
+            ("Conférence Tech", "2026-10-05", "09:00"),
+            ("Pièce de Théâtre", "2026-11-20", "19:30")]
         self.table.setRowCount(0)
 
         for row_idx, (name, date, hour) in enumerate(data):
