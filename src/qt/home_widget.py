@@ -1,11 +1,12 @@
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
                              QTableWidgetItem, QHeaderView, QLabel, QPushButton, QFrame, QAbstractItemView, QGridLayout)
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 
 from src.db.requests import get_all_events_with_names
 from src.db.requests import get_all_events
 
+from src.qt.reservation_widget import ReservationWidget
 
 class HomeWidget(QWidget):
     def __init__(self, parent=None):
@@ -125,13 +126,14 @@ class HomeWidget(QWidget):
         self.layout.addWidget(self.table)
         self.refresh_data()
 
-    def create_reserve_button(self, evt_id):
+    def create_reserve_button(self, evt_id, evt_name):
         widget = QWidget()
         layout = QHBoxLayout(widget)
 
         btn = QPushButton("Réserver")
         btn.setObjectName("reserveButton")
-        # NOTE: Ici, vous connecteriez le signal au slot de réservation (ex: btn.clicked.connect(lambda: self.reserve_event(evt_id)))
+
+        btn.clicked.connect(lambda: QTimer.singleShot(0, lambda: self.window().show_reservation_widget(evt_id, evt_name)))
 
         layout.addWidget(btn)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -203,7 +205,7 @@ class HomeWidget(QWidget):
             item_hour.setForeground(QBrush(QColor("#a6adc8")))
 
             # 4. Bouton "Réserver"
-            self.table.setCellWidget(row_idx, 3, self.create_reserve_button(evt_id))
+            self.table.setCellWidget(row_idx, 3, self.create_reserve_button(evt_id, evt_name))
 
             self.table.setItem(row_idx, 1, item_date)
             self.table.setItem(row_idx, 2, item_hour)
