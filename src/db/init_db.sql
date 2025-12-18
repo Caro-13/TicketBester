@@ -1,58 +1,53 @@
 -- Mocktest infos
-INSERT INTO staff (id, name) VALUES 
+INSERT INTO client (id, mail, prenom, nom) VALUES
+(1, 'john.doe@example.com', 'John', 'Doe'),
+(2, 'jane.smith@example.com', 'Jane', 'Smith');
+
+INSERT INTO staff (id, name) VALUES
 (1, 'Online'),
 (2, 'Delta'),
 (3, 'Echo');
 
-INSERT INTO client (id, mail, prenom, nom) VALUES 
-(1, 'john.doe@example.com', 'John', 'Doe'),
-(2, 'jane.smith@example.com', 'Jane', 'Smith');
+INSERT INTO discount (id, value, code) VALUES
+(1, 20, 'STUDENT20'),
+(2, 15, 'EARLYBIRD15');
 
 INSERT INTO typeOfSeat (id, type) VALUES 
 (1, 'Standard'),
 (2, 'Easy Access'),
 (3, 'VIP');
 
-INSERT INTO seat (id, typeId) VALUES 
+INSERT INTO room (id, name, nbSeats, subRoom) VALUES
+(1, 'Main Hall', 0, NULL),
+(2, 'Balcony', 0, 1);
+
+INSERT INTO seat (id, typeId) VALUES
 ('A01', 1),
 ('A02', 1),
 ('A03', 1),
-('B01', 2),
+('B01', 2), --easy
 ('B02', 1),
 ('B03', 1),
-('C01', 2),
+('C01', 2), --easy
 ('C02', 1),
 ('C03', 1),
 ('D01', 1),
 ('D02', 1),
 ('D03', 1);
 
-INSERT INTO sittingPlan (id, name) VALUES 
-(1, 'Cinema Test');
-
-INSERT INTO sittingPlan_seat (sittingPlanId, seatId) VALUES 
-(1, 'A01'),
-(1, 'A02'),
-(1, 'A03'),
-(1, 'B01'),
-(1, 'B02'),
-(1, 'B03'),
-(1, 'C01'),
-(1, 'C02'),
-(1, 'C03'),
-(1, 'D01'),
-(1, 'D02'),
-(1, 'D03');
-
 INSERT INTO typeOfEvent (id, name, isFree, needReservation, sittingPlanId) VALUES 
-(1, 'Cinema', false, true, 1);
+(1, 'Concert de Rock', false, true, 1),
+(2, 'Exposotion d art', true,false,1),
+(3,'Festival de jazz',false,true,1),
+(4,'Conférence Tech',true,true,1),
+(5,'Pièce de théâtre',false,true,1);
 
-INSERT INTO event (id, typeId, date, hour, dateFin, heureFin) VALUES 
-(1, 1, '2025-12-20', '20:00:00', '2025-12-20', '22:30:00');
-
-INSERT INTO discount (id, value, code) VALUES 
-(1, 20, 'STUDENT20'),
-(2, 15, 'EARLYBIRD15');
+INSERT INTO event (id, typeId, date, hour, dateFin, heureFin,name) VALUES
+(1, 1, '2026-07-15', '20:00:00', '2026-07-15', '22:30:00','Concert de Rock'),
+(2,2,'2026-08-01','10:00','2026-08-01','18:00','Exposition d''Art'),
+(3,3,'2026-09-10','18:30','2026-09-11','03:00','Festival de Jazz'),
+(4,4,'2026-10-05','09:00','2026-10-05','10:00','Conférence Tech'),
+(5,5,'2026-11-20','19:30','2026-11-20','21:00','Otello');
 
 INSERT INTO tarif (id, eventId, name, price, discountId) VALUES 
 (1, 1, 'Normal', 12.00, NULL),
