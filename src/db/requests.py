@@ -37,3 +37,6 @@ def get_all_events_with_names():
         conn.close()
 
     return rows
+
+def get_tarifs_for_event(event_id):
+    pass

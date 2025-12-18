@@ -116,7 +116,7 @@ class HomeWidget(QWidget):
                 color: #1e1e2e;
                 font-weight: bold;
                 border-radius: 5px;
-                padding: 10px 20px; /* <--- MODIFIÉ : PLUS DE PADDING = PLUS LARGE */
+                padding: 10px 20px;
             }
             QPushButton#reserveButton:hover {
                 background-color: #b4befe;
@@ -147,10 +147,11 @@ class HomeWidget(QWidget):
         # data = get_all_events_with_names()
         # False data for demonstration purposes
         data = [
-            (1, "Concert de Rock: Tour 2025", "Musique/Concert", "2024-07-15", "20:00"),
-            (2, "Rétrospective Picasso", "Art/Exposition", "2024-08-01", "10:00"),
-            (3, "Festival du Rire", "Comédie", "2024-09-10", "18:30"),
-            (4, "Otello par la Troupe Nationale", "Théâtre", "2024-11-20", "19:30")
+            (1, "Concert de Rock: Tour 2025", "Musique/Concert", "2026-07-15", "20:00"),
+            (2, "Rétrospective Picasso", "Art/Exposition", "2026-08-01", "10:00"),
+            (3, "Festival du Rire", "Comédie", "2026-09-10", "18:30"),
+            (4, "Conférence Tech", "Technologie", "2026-10-05", "09:00"),
+            (5, "Otello par la Troupe Nationale", "Théâtre", "2026-11-20", "19:30")
         ]
 
         self.table.setRowCount(0)
@@ -175,7 +176,6 @@ class HomeWidget(QWidget):
 
             # Nom
             name_label = QLabel(str(evt_name))
-            # <--- MODIFIÉ : TAILLE DE POLICE AUGMENTÉE (15px)
             name_label.setStyleSheet("font-weight: bold; font-size: 15px; color: #cdd6f4;")
 
             # Type

@@ -27,7 +27,6 @@ class TicketBester(QMainWindow):
         self.show_home_widget()
 
 
-    # --- NOUVELLES MÉTHODES DE GESTION DES VUES ---
     def clear_central_widget(self):
         """Nettoie le widget central pour afficher une nouvelle vue."""
         if self.current_widget:

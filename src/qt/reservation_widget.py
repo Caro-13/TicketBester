@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QColor, QBrush
 
-# from src.db.requests import get_tarifs_for_event
+from src.db.requests import get_tarifs_for_event
 
 class ReservationWidget(QWidget):
     def __init__(self, parent=None, event_id=None, event_name="Titre Événement"):
@@ -11,6 +11,7 @@ class ReservationWidget(QWidget):
         self.event_id = event_id
         self.event_name = event_name
         self.tarifs = self._load_dummy_tarifs()  # Utilise des données factices pour le design
+        self.prix_total = 0.00
 
         # --- Layout Principal ---
         self.layout = QVBoxLayout(self)
@@ -111,6 +112,8 @@ class ReservationWidget(QWidget):
                 details_label.setStyleSheet("font-size: 10px; color: #6c7086;")
                 tarifs_grid.addWidget(details_label, i, 2, Qt.AlignmentFlag.AlignLeft)
 
+            self.prix_total += quantity_box.value() * tarif['price']
+
         content_layout.addLayout(tarifs_grid)
 
         # --- Section Code de Réduction ---
@@ -158,7 +161,7 @@ class ReservationWidget(QWidget):
         footer_layout.setContentsMargins(0, 15, 0, 0)
 
         # Label Total
-        total_label = QLabel("Total: 0.00 CHF")
+        total_label = QLabel(f"Total: {self.prix_total} CHF")
         total_label.setObjectName("TotalLabel")
         total_label.setStyleSheet("QLabel#TotalLabel {font-size: 20px; font-weight: bold; color: #fab387;}")
 
