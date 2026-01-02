@@ -49,10 +49,11 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
 
-    def show_seatmap_widget(self): # ToDo Bouton Back non fonctionnel
+    def show_seatmap_widget(self):
         self.clear_central_widget()
         self.current_widget = ConcertHall(self)
-        self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)
+        self.current_widget.btn_home.clicked.connect(self.show_home_widget)
+        self.current_widget.btn_confirm.clicked.connect(self.show_home_widget) # ToDo Rediriger vers payment
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester - Sélection des sièges")
 

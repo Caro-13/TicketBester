@@ -91,11 +91,11 @@ class ConcertHall(QWidget): # ToDo Ajouter les informations à transmettre
         # Header (Home + Titre)
         header_layout = QHBoxLayout()
 
-        # Back button # ToDo Not working
-        self.btn_back = QPushButton("← Retour")
-        self.btn_back.setFixedWidth(100)
-        self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_back.setStyleSheet("""
+        # Home button
+        self.btn_home = QPushButton("← Home")
+        self.btn_home.setFixedWidth(100)
+        self.btn_home.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_home.setStyleSheet("""
                     QPushButton {
                         background-color: transparent; 
                         color: #89b4fa;
@@ -109,7 +109,7 @@ class ConcertHall(QWidget): # ToDo Ajouter les informations à transmettre
                     }
                 """)
 
-        header_layout.addWidget(self.btn_back)
+        header_layout.addWidget(self.btn_home)
         header_layout.addStretch()
 
         self.plan_container.addLayout(header_layout)
