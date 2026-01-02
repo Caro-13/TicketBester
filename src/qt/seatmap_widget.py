@@ -76,7 +76,6 @@ class ConcertHall(QWidget): # ToDo Ajouter les informations à transmettre
         super().__init__(parent)
         super().__init__()
         self.setWindowTitle("Systeme de Reservation - Salle de Concert")
-        self.resize(1400, 900)
         self.setStyleSheet("background-color: #1e1e2e;")
 
         # Main layout

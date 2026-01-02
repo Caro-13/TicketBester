@@ -30,6 +30,7 @@ class TicketBester(QMainWindow):
 
     def clear_central_widget(self):
         """Nettoie le widget central pour afficher une nouvelle vue."""
+
         if self.current_widget:
             self.centralwidget.layout().removeWidget(self.current_widget)
             self.current_widget.deleteLater()
@@ -38,6 +39,7 @@ class TicketBester(QMainWindow):
     def show_reservation_widget(self, event_id, event_name):
         """Affiche la page de réservation pour un événement donné."""
         self.clear_central_widget()
+        self.resize(1000, 700)
         self.current_widget = ReservationWidget(self, event_id=event_id, event_name=event_name)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle(f"TicketBester - Réservation #{event_id}")
@@ -45,12 +47,14 @@ class TicketBester(QMainWindow):
     def show_home_widget(self):
         """Revient à la page d'accueil."""
         self.clear_central_widget()
+        self.resize(1000, 700) # ToDo Ne Change pas la taille de la fenêtre
         self.current_widget = HomeWidget(self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
 
     def show_seatmap_widget(self):
         self.clear_central_widget()
+        self.resize(1400, 900)
         self.current_widget = ConcertHall(self)
         self.current_widget.btn_home.clicked.connect(self.show_home_widget)
         self.current_widget.btn_confirm.clicked.connect(self.show_home_widget) # ToDo Rediriger vers payment

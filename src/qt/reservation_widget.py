@@ -8,6 +8,7 @@ from src.db.requests import get_tarifs_for_event
 class ReservationWidget(QWidget):
     def __init__(self, parent=None, event_id=None, event_name="Titre Événement"):
         super().__init__(parent)
+
         self.event_id = event_id
         self.event_name = event_name
         self.tarifs = self._load_dummy_tarifs()  # Utilise des données factices pour le design
