@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 from src.qt.home_widget import HomeWidget
 from src.qt.reservation_widget import ReservationWidget
+from src.qt.seatmap_widget import ConcertHall
 
 class TicketBester(QMainWindow):
 
@@ -47,6 +48,20 @@ class TicketBester(QMainWindow):
         self.current_widget = HomeWidget(self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
+
+    def show_seatmap_widget(self): # ToDo Bouton Back non fonctionnel
+        self.clear_central_widget()
+        self.current_widget = ConcertHall(self)
+        self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)
+        self.centralwidget.layout().addWidget(self.current_widget)
+        self.setWindowTitle("TicketBester - Sélection des sièges")
+
+    def show_payment_widget(self): # ToDo Faire le widget
+        self.clear_central_widget()
+        # self.current_widget = ConcertHall(self)
+        # self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)
+        # self.centralwidget.layout().addWidget(self.current_widget)
+        # self.setWindowTitle("TicketBester")
 
 
 def main():

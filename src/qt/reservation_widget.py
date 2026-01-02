@@ -181,6 +181,8 @@ class ReservationWidget(QWidget):
             }
         """)
 
+        self.btn_continue.clicked.connect(self.window().show_seatmap_widget)
+
         footer_layout.addWidget(total_label)
         footer_layout.addStretch()
         footer_layout.addWidget(self.btn_continue)
