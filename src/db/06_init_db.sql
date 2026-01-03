@@ -1,3 +1,4 @@
+SET client_encoding = 'UTF8';
 -- Mocktest infos
 INSERT INTO room (id, name, address) VALUES
 (1, 'ISC Room','Rue de l''Industrie 42,1950 Sion');
