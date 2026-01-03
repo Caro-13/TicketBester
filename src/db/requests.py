@@ -358,3 +358,165 @@ def create_payment(reservation_id, total, method='card'):
             connection.close()
 
 
+# Admin functions
+def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on_sale'):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                INSERT INTO event (type_id, name, start_at, end_at, room_id, config_id, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id \
+                """
+        cursor.execute(query, (type_id, name, start_at, end_at, room_id, config_id, status))
+        event_id = cursor.fetchone()[0]
+        connection.commit()
+
+        cursor.close()
+        return event_id
+    except Exception as e:
+        print(f"Error creating event: {e}")
+        if connection:
+            connection.rollback()
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def add_staff_member(name):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = "INSERT INTO staff (name) VALUES (%s) RETURNING id"
+        cursor.execute(query, (name,))
+        staff_id = cursor.fetchone()[0]
+        connection.commit()
+
+        cursor.close()
+        return staff_id
+    except Exception as e:
+        print(f"Error adding staff: {e}")
+        if connection:
+            connection.rollback()
+        return None
+    finally:
+        if connection:
+            connection.close()
+
+def get_event_statistics():
+    """Get statistics for all events."""
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT e.id, \
+                       e.name, \
+                       e.start_at, \
+                       e.status, \
+                       COUNT(DISTINCT t.id)       as tickets_sold, \
+                       COUNT(DISTINCT st.id)      as tickets_scanned, \
+                       COUNT(DISTINCT es.seat_id) as total_seats
+                FROM event e
+                         LEFT JOIN ticket t ON e.id = t.event_id
+                         LEFT JOIN scan_ticket st ON t.id = st.ticket_id
+                         LEFT JOIN event_seat es ON e.id = es.event_id
+                GROUP BY e.id, e.name, e.start_at, e.status
+                ORDER BY e.start_at DESC \
+                """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        stats = []
+        for row in rows:
+            stats.append({
+                'id': row[0],
+                'name': row[1],
+                'start_at': row[2],
+                'status': row[3],
+                'tickets_sold': row[4],
+                'tickets_scanned': row[5],
+                'total_seats': row[6]
+            })
+
+        cursor.close()
+        return stats
+    except Exception as e:
+        print(f"Error fetching statistics: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+# Staff functions
+def get_all_staff():
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = "SELECT id, name FROM staff WHERE id != 1 ORDER BY name"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return rows
+    except Exception as e:
+        print(f"Error fetching staff: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def scan_ticket(ticket_id, staff_id, door):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        # Check if ticket exists and is valid
+        check_query = """
+                      SELECT t.id, r.status
+                      FROM ticket t
+                               JOIN reservation r ON t.reservation_id = r.id
+                      WHERE t.id = %s \
+                      """
+        cursor.execute(check_query, (ticket_id,))
+        result = cursor.fetchone()
+
+        if not result:
+            return {"success": False, "message": "Billet invalide"}
+
+        if result[1] != 'paid':
+            return {"success": False, "message": "Billet non payé"}
+
+        # Check if already scanned
+        scan_check = "SELECT id FROM scan_ticket WHERE ticket_id = %s"
+        cursor.execute(scan_check, (ticket_id,))
+        if cursor.fetchone():
+            return {"success": False, "message": "Billet déjà scanné"}
+
+        # Record scan
+        insert_query = """
+                       INSERT INTO scan_ticket (staff_id, door, ticket_id)
+                       VALUES (%s, %s, %s) \
+                       """
+        cursor.execute(insert_query, (staff_id, door, ticket_id))
+        connection.commit()
+
+        cursor.close()
+        return {"success": True, "message": f"Billet #{ticket_id} validé"}
+    except Exception as e:
+        print(f"Error scanning ticket: {e}")
+        if connection:
+            connection.rollback()
+        return {"success": False, "message": "Erreur système"}
+    finally:
+        if connection:
+            connection.close()

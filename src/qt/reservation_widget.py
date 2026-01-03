@@ -166,13 +166,18 @@ class ReservationWidget(QWidget):
             }
         """)
 
-        self.btn_continue.clicked.connect(self.window().show_seatmap_widget)
+        # Pass the event_id when clicking continue
+        self.btn_continue.clicked.connect(self._go_to_seatmap)
 
         footer_layout.addWidget(self.total_label)
         footer_layout.addStretch()
         footer_layout.addWidget(self.btn_continue)
 
         self.layout.addWidget(footer_frame)
+
+    def _go_to_seatmap(self):
+        """Navigate to seatmap widget with the current event_id."""
+        self.window().show_seatmap_widget(self.event_id)
 
     def _update_total(self):
         total = 0.0
