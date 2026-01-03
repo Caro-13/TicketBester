@@ -1,9 +1,8 @@
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
-                             QTableWidgetItem, QHeaderView, QLabel, QPushButton, QFrame, QAbstractItemView, QGridLayout)
+                             QTableWidgetItem, QHeaderView, QLabel, QPushButton, QFrame, QAbstractItemView, QMessageBox)
 from PyQt6.QtCore import Qt, QTimer
 
-from src.db.requests import get_all_events_with_names
 from src.db.requests import get_all_events
 
 from src.qt.reservation_widget import ReservationWidget
@@ -143,69 +142,88 @@ class HomeWidget(QWidget):
         return widget
 
     def refresh_data(self):
-        # TODO: Change this to get_all_events_with_names() when ready
-        # data = get_all_events_with_names()
-        # False data for demonstration purposes
-        data = [
-            (1, "Concert de Rock: Tour 2025", "Musique/Concert", "2026-07-15", "20:00"),
-            (2, "Rétrospective Picasso", "Art/Exposition", "2026-08-01", "10:00"),
-            (3, "Festival du Rire", "Comédie", "2026-09-10", "18:30"),
-            (4, "Conférence Tech", "Technologie", "2026-10-05", "09:00"),
-            (5, "Otello par la Troupe Nationale", "Théâtre", "2026-11-20", "19:30")
-        ]
+        try:
+            # Fetch real data from database
+            data = get_all_events()
 
-        self.table.setRowCount(0)
+            if not data:
+                # Show message if no events found
+                QMessageBox.information(
+                    self,
+                    "Information",
+                    "Aucun événement disponible pour le moment."
+                )
+                self.table.setRowCount(0)
+                return
 
-        for row_idx, row_data in enumerate(data):
+            self.table.setRowCount(0)
 
-            if len(row_data) == 4:
-                evt_id, evt_name, type_name, date, hour = row_idx + 1, row_data[0], row_data[1], row_data[2], row_data[
-                    3]
-            else:
-                evt_id, evt_name, type_name, date, hour = row_data[0], row_data[1], row_data[2], row_data[3], row_data[
-                    4]
+            for row_idx, row_data in enumerate(data):
+                evt_id = row_data[0]
+                evt_name = row_data[1]
+                type_name = row_data[2]
+                date = row_data[3]
+                hour = row_data[4]
 
-            self.table.insertRow(row_idx)
-            self.table.setRowHeight(row_idx, 70)
+                # Format date and time for display
+                if hasattr(date, 'strftime'):
+                    date_str = date.strftime('%d/%m/%Y')
+                else:
+                    date_str = str(date)
 
-            # 1. ÉVÈNEMENT / TYPE
-            cell_widget = QWidget()
-            cell_layout = QVBoxLayout(cell_widget)
-            cell_layout.setContentsMargins(0, 0, 0, 0)
-            cell_layout.setSpacing(2)
+                if hasattr(hour, 'strftime'):
+                    hour_str = hour.strftime('%H:%M')
+                else:
+                    hour_str = str(hour)[:5]  # Take first 5 chars (HH:MM)
 
-            # Nom
-            name_label = QLabel(str(evt_name))
-            name_label.setStyleSheet("font-weight: bold; font-size: 15px; color: #cdd6f4;")
+                self.table.insertRow(row_idx)
+                self.table.setRowHeight(row_idx, 70)
 
-            # Type
-            type_label = QLabel(f"Type: {str(type_name)}")
-            type_label.setStyleSheet("font-style: italic; color: #a6adc8; font-size: 10px;")
+                # 1. ÉVÈNEMENT / TYPE
+                cell_widget = QWidget()
+                cell_layout = QVBoxLayout(cell_widget)
+                cell_layout.setContentsMargins(0, 0, 0, 0)
+                cell_layout.setSpacing(2)
 
-            cell_layout.addWidget(name_label)
-            cell_layout.addWidget(type_label)
-            cell_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                # Nom
+                name_label = QLabel(str(evt_name))
+                name_label.setStyleSheet("font-weight: bold; font-size: 15px; color: #cdd6f4;")
 
-            self.table.setCellWidget(row_idx, 0, cell_widget)
+                # Type
+                type_label = QLabel(f"Type: {str(type_name)}")
+                type_label.setStyleSheet("font-style: italic; color: #a6adc8; font-size: 10px;")
 
-            # 2. DATE
-            item_date = QTableWidgetItem(str(date))
-            item_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                cell_layout.addWidget(name_label)
+                cell_layout.addWidget(type_label)
+                cell_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-            font = item_date.font()
-            font.setPointSize(14)
-            font.setBold(True)
-            item_date.setFont(font)
+                self.table.setCellWidget(row_idx, 0, cell_widget)
 
-            item_date.setForeground(QBrush(QColor("#fab387")))
+                # 2. DATE
+                item_date = QTableWidgetItem(str(date))
+                item_date.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
 
-            # 3. HEURE
-            item_hour = QTableWidgetItem(str(hour))
-            item_hour.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            item_hour.setForeground(QBrush(QColor("#a6adc8")))
+                font = item_date.font()
+                font.setPointSize(14)
+                font.setBold(True)
+                item_date.setFont(font)
 
-            # 4. Bouton "Réserver"
-            self.table.setCellWidget(row_idx, 3, self.create_reserve_button(evt_id, evt_name))
+                item_date.setForeground(QBrush(QColor("#fab387")))
+                self.table.setItem(row_idx, 1, item_date)
 
-            self.table.setItem(row_idx, 1, item_date)
-            self.table.setItem(row_idx, 2, item_hour)
+                # 3. HEURE
+                item_hour = QTableWidgetItem(str(hour))
+                item_hour.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                item_hour.setForeground(QBrush(QColor("#a6adc8")))
+                self.table.setItem(row_idx, 2, item_hour)
+
+                # 4. Bouton "Réserver"
+                self.table.setCellWidget(row_idx, 3, self.create_reserve_button(evt_id, evt_name))
+
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Erreur",
+                f"Impossible de charger les événements:\n{str(e)}"
+            )
+            print(f"Error in refresh_data: {e}")

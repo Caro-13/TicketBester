@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
-                             QSpinBox, QLineEdit, QGridLayout)
+                             QSpinBox, QLineEdit, QGridLayout, QMessageBox)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QColor, QBrush
 
-from src.db.requests import get_tarifs_for_event
+from src.db.requests import get_tarifs_for_event, get_all_events_details
 
 class ReservationWidget(QWidget):
     def __init__(self, parent=None, event_id=None, event_name="Titre Événement"):
@@ -11,7 +11,7 @@ class ReservationWidget(QWidget):
 
         self.event_id = event_id
         self.event_name = event_name
-        self.tarifs = self._load_dummy_tarifs()  # Utilise des données factices pour le design
+        self.tarifs = []
         self.prix_total = 0.00
 
         # --- Layout Principal ---
@@ -22,25 +22,34 @@ class ReservationWidget(QWidget):
         # --- Titre et Navigation ---
         self._setup_header()
 
-        # --- Contenu Principal (Tarifs et Réductions) ---
+        # Load tarifs from database
+        self._load_tarifs()
+
+        # --- Contenu Principal (Tarifs) ---
         self._setup_tarifs_section()
 
         # --- Section Récapitulatif et Paiement ---
         self._setup_footer()
 
-    def _load_dummy_tarifs(self):
-        # Données factices pour simuler les tarifs d'un événement
-        return [
-            {"name": "Normal", "price": 12.00, "details": ""},
-            {"name": "Student*", "price": 10.00, "details": "Contrôle carte étudiant"},
-            {"name": "Staff**", "price": 8.00, "details": "*Réservé au personnel"},
-        ]
+    def _load_tarifs(self):
+        try:
+            if self.event_id:
+                self.tarifs = get_tarifs_for_event(self.event_id)
+
+        except Exception as e:
+            print(f"Error loading tarifs: {e}")
+            # Use dummy data on error
+            self.tarifs = [
+                {"id": 1, "name": "Normal", "price": 12.00, "discount_percent": None, "discount_code": None},
+                {"id": 2, "name": "Student", "price": 10.00, "discount_percent": None, "discount_code": None},
+            ]
 
     def _setup_header(self):
         header_layout = QHBoxLayout()
 
         # Bouton Retour (pour revenir à HomeWidget)
         self.btn_back = QPushButton("← Retour aux évènements")
+        self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_back.setStyleSheet("""
             QPushButton {
                 background-color: transparent; 
@@ -86,12 +95,14 @@ class ReservationWidget(QWidget):
 
         for i, tarif in enumerate(self.tarifs):
             # Ligne 1: Nom et Prix
-            name_label = QLabel(f"{tarif['name']} ({tarif['price']:.2f} CHF)")
+            price = tarif['price']
+            name_label = QLabel(f"{tarif['name']} ({price:.2f} CHF)")
             name_label.setStyleSheet("font-size: 15px; font-weight: 500;")
 
             # Ligne 2: Champ de Quantité (SpinBox)
             quantity_box = QSpinBox()
             quantity_box.setRange(0, 10)  # Max 10 billets par tarif
+            quantity_box.setValue(0)
             quantity_box.setFixedWidth(60)
             quantity_box.setStyleSheet("""
                 QSpinBox {
@@ -101,57 +112,32 @@ class ReservationWidget(QWidget):
                     padding: 5px;
                     color: #cdd6f4;
                 }
+                QSpinBox::up-button, QSpinBox::down-button {
+                    background-color: #45475a;
+                    border: none;
+                    width: 16px;
+                }
+                QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                    background-color: #585b70;
+                }
             """)
+
+            # Connect to update total
+            quantity_box.valueChanged.connect(self._update_total)
             self.quantity_spinboxes[tarif['name']] = quantity_box
 
             # Placement dans la grille (Nom, Quantité, Détails)
             tarifs_grid.addWidget(name_label, i, 0, Qt.AlignmentFlag.AlignLeft)
             tarifs_grid.addWidget(quantity_box, i, 1, Qt.AlignmentFlag.AlignRight)
 
-            if tarif['details']:
-                details_label = QLabel(f"* {tarif['details']}")
-                details_label.setStyleSheet("font-size: 10px; color: #6c7086;")
+            # Add note for special tarifs (those with *)
+            if '*' in tarif['name'] or tarif['name'].lower() in ['student', 'staff']:
+                details_label = QLabel("* Contrôle à l'entrée")
+                details_label.setStyleSheet("font-size: 10px; color: #6c7086; font-style: italic;")
                 tarifs_grid.addWidget(details_label, i, 2, Qt.AlignmentFlag.AlignLeft)
 
-            self.prix_total += quantity_box.value() * tarif['price']
-
         content_layout.addLayout(tarifs_grid)
-
-        # --- Section Code de Réduction ---
-        discount_group = QHBoxLayout()
-        self.discount_input = QLineEdit()
-        self.discount_input.setPlaceholderText("Code de réduction (Pre-Command...)")
-        self.discount_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #313244;
-                border: 1px solid #45475a;
-                border-radius: 4px;
-                padding: 8px;
-                color: #cdd6f4;
-            }
-        """)
-
-        self.btn_apply_discount = QPushButton("Appliquer")
-        self.btn_apply_discount.setFixedWidth(100)
-        self.btn_apply_discount.setStyleSheet("""
-            QPushButton {
-                background-color: #fab387;
-                color: #1e1e2e;
-                font-weight: bold;
-                border-radius: 4px;
-                padding: 8px;
-            }
-            QPushButton:hover {
-                background-color: #fbd6ac;
-            }
-        """)
-
-        discount_group.addWidget(self.discount_input)
-        discount_group.addWidget(self.btn_apply_discount)
-
-        content_layout.addSpacing(20)
-        content_layout.addLayout(discount_group)
-        content_layout.addStretch()  # Pousse tout le contenu vers le haut
+        content_layout.addStretch()
 
         self.layout.addWidget(content_frame)
 
@@ -162,13 +148,15 @@ class ReservationWidget(QWidget):
         footer_layout.setContentsMargins(0, 15, 0, 0)
 
         # Label Total
-        total_label = QLabel(f"Total: {self.prix_total} CHF")
-        total_label.setObjectName("TotalLabel")
-        total_label.setStyleSheet("QLabel#TotalLabel {font-size: 20px; font-weight: bold; color: #fab387;}")
+        self.total_label = QLabel(f"Total: {self.prix_total:.2f} CHF")
+        self.total_label.setObjectName("TotalLabel")
+        self.total_label.setStyleSheet("QLabel#TotalLabel {font-size: 20px; font-weight: bold; color: #fab387;}")
 
         # Bouton Continuer/Payer (Côté droit)
         self.btn_continue = QPushButton("Continuer →")
+        self.btn_continue.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_continue.setFixedWidth(150)
+        self.btn_continue.setEnabled(False)  # Disabled until tickets selected
         self.btn_continue.setStyleSheet("""
             QPushButton {
                 background-color: #89b4fa;
@@ -180,12 +168,32 @@ class ReservationWidget(QWidget):
             QPushButton:hover {
                 background-color: #b4befe;
             }
+            QPushButton:disabled {
+                background-color: #45475a;
+                color: #6c7086;
+            }
         """)
 
         self.btn_continue.clicked.connect(self.window().show_seatmap_widget)
 
-        footer_layout.addWidget(total_label)
+        footer_layout.addWidget(self.total_label)
         footer_layout.addStretch()
         footer_layout.addWidget(self.btn_continue)
 
         self.layout.addWidget(footer_frame)
+
+    def _update_total(self):
+        total = 0.0
+
+        for tarif in self.tarifs:
+            quantity = self.quantity_spinboxes[tarif['name']].value()
+            total += quantity * tarif['price']
+
+        self.prix_total = total
+
+        # Update display
+        self.total_label.setText(f"Total: {self.prix_total:.2f} CHF")
+
+        # Enable/disable continue button
+        has_tickets = any(spinbox.value() > 0 for spinbox in self.quantity_spinboxes.values())
+        self.btn_continue.setEnabled(has_tickets)
