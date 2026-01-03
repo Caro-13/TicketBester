@@ -112,14 +112,6 @@ class ReservationWidget(QWidget):
                     padding: 5px;
                     color: #cdd6f4;
                 }
-                QSpinBox::up-button, QSpinBox::down-button {
-                    background-color: #45475a;
-                    border: none;
-                    width: 16px;
-                }
-                QSpinBox::up-button:hover, QSpinBox::down-button:hover {
-                    background-color: #585b70;
-                }
             """)
 
             # Connect to update total
