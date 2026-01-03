@@ -2,7 +2,7 @@ import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                              QFrame, QGridLayout, QApplication, QScrollArea)
 from PyQt6.QtCore import Qt, pyqtSignal
-from src.db.requests import get_seats_with_status_for_event
+from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event
 
 
 # QPushButton for seats with a style
@@ -224,8 +224,19 @@ class ConcertHall(QWidget):
 
         self.main_layout.addLayout(self.plan_container, stretch=4)
 
-        # Side shutter
+        # Right side with two panels
+        right_side_layout = QVBoxLayout()
+        right_side_layout.setSpacing(20)
+
+        # Legend panel
+        self._setup_legend_panel()
+        right_side_layout.addWidget(self.legend_panel)
+
+        # Selection panel
         self._setup_side_panel()
+        right_side_layout.addWidget(self.side_panel)
+
+        self.main_layout.addLayout(right_side_layout)
 
         # Connections
         self._connect_all_seats()
@@ -238,6 +249,117 @@ class ConcertHall(QWidget):
             if sector_name not in self.sector_seats:
                 self.sector_seats[sector_name] = []
             self.sector_seats[sector_name].append(seat)
+
+    def _setup_legend_panel(self):
+        """Legends to seat status and sectors"""
+        self.legend_panel = QFrame()
+        self.legend_panel.setFixedWidth(320)
+        self.legend_panel.setStyleSheet("background: #181825; border-radius: 15px; border: 1px solid #313244;")
+        legend_layout = QVBoxLayout(self.legend_panel)
+        legend_layout.setContentsMargins(20, 20, 20, 20)
+        legend_layout.setSpacing(10)
+
+        title = QLabel("LÉGENDE")
+        title.setStyleSheet("color: #fab387; font-weight: bold; font-size: 16px; border: none;")
+        legend_layout.addWidget(title)
+
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet("background-color: #313244; border: none;")
+        line.setFixedHeight(1)
+        legend_layout.addWidget(line)
+
+        # Status section
+        status_title = QLabel("Statuts")
+        status_title.setStyleSheet("color: #cdd6f4; font-weight: bold; font-size: 13px; border: none; margin-top: 5px;")
+        legend_layout.addWidget(status_title)
+
+        # Sold
+        sold_layout = QHBoxLayout()
+        sold_box = QLabel()
+        sold_box.setFixedSize(15, 15)
+        sold_box.setStyleSheet("background-color: #6c7086; border: 1px solid #6c7086; border-radius: 3px;")
+        sold_text = QLabel("Vendu")
+        sold_text.setStyleSheet("color: #bac2de; font-size: 12px; border: none;")
+        sold_layout.addWidget(sold_box)
+        sold_layout.addWidget(sold_text)
+        sold_layout.addStretch()
+        legend_layout.addLayout(sold_layout)
+
+        # Reserved
+        reserved_layout = QHBoxLayout()
+        reserved_box = QLabel()
+        reserved_box.setFixedSize(15, 15)
+        reserved_box.setStyleSheet("background-color: #b4befe; border: 1px solid #b4befe; border-radius: 3px;")
+        reserved_text = QLabel("Réservé")
+        reserved_text.setStyleSheet("color: #bac2de; font-size: 12px; border: none;")
+        reserved_layout.addWidget(reserved_box)
+        reserved_layout.addWidget(reserved_text)
+        reserved_layout.addStretch()
+        legend_layout.addLayout(reserved_layout)
+
+        # Separator
+        line2 = QFrame()
+        line2.setFrameShape(QFrame.Shape.HLine)
+        line2.setStyleSheet("background-color: #313244; border: none;")
+        line2.setFixedHeight(1)
+        legend_layout.addWidget(line2)
+
+        # Sectors section
+        sectors_title = QLabel("Catégories")
+        sectors_title.setStyleSheet(
+            "color: #cdd6f4; font-weight: bold; font-size: 13px; border: none; margin-top: 5px;")
+        legend_layout.addWidget(sectors_title)
+
+        # Define sectors with their colors
+        sectors = [
+            ("#f9e2af", "Balcon"),
+            ("#f38ba8", "VIP"),
+            ("#a6e3a1", "SPC"),
+            ("#6cbdf9", "Standard")
+        ]
+
+        for color, name in sectors:
+            sector_layout = QHBoxLayout()
+            sector_box = QLabel()
+            sector_box.setFixedSize(15, 15)
+            sector_box.setStyleSheet(f"background-color: {color}; border: 1px solid {color}; border-radius: 3px;")
+            sector_text = QLabel(name)
+            sector_text.setStyleSheet("color: #bac2de; font-size: 12px; border: none;")
+            sector_layout.addWidget(sector_box)
+            sector_layout.addWidget(sector_text)
+            sector_layout.addStretch()
+            legend_layout.addLayout(sector_layout)
+
+        # Check if there are supplements in the data
+        try:
+            sector_supplements = get_sector_supplements_for_event(self.event_id)
+        except Exception as e:
+            print(f"Error loading supplements: {e}")
+            sector_supplements = {}
+
+        if sector_supplements:
+            # Separator
+            line3 = QFrame()
+            line3.setFrameShape(QFrame.Shape.HLine)
+            line3.setStyleSheet("background-color: #313244; border: none;")
+            line3.setFixedHeight(1)
+            legend_layout.addWidget(line3)
+
+            # Supplements section
+            supplements_title = QLabel("Suppléments")
+            supplements_title.setStyleSheet("color: #cdd6f4; font-weight: bold; font-size: 13px; border: none; margin-top: 5px;")
+            legend_layout.addWidget(supplements_title)
+
+            for sector_name, supplement in sector_supplements.items():
+                supp_layout = QHBoxLayout()
+                supp_text = QLabel(f"{sector_name}: +{supplement:.2f} CHF")
+                supp_text.setStyleSheet("color: #bac2de; font-size: 12px; border: none;")
+                supp_layout.addWidget(supp_text)
+                supp_layout.addStretch()
+                legend_layout.addLayout(supp_layout)
+
+        legend_layout.addStretch()
 
     def _setup_side_panel(self):
         self.side_panel = QFrame()
@@ -309,6 +431,8 @@ class ConcertHall(QWidget):
                 if s.isChecked():
                     selected_ids.append(s.seat_id)
         return selected_ids
+
+
 
 
 if __name__ == "__main__":

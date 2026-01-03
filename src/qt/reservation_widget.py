@@ -176,7 +176,6 @@ class ReservationWidget(QWidget):
         self.layout.addWidget(footer_frame)
 
     def _go_to_seatmap(self):
-        """Navigate to seatmap widget with the current event_id."""
         self.window().show_seatmap_widget(self.event_id)
 
     def _update_total(self):

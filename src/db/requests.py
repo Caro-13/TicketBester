@@ -357,6 +357,44 @@ def create_payment(reservation_id, total, method='card'):
         if connection:
             connection.close()
 
+def get_sector_supplements_for_event(event_id):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+            SELECT DISTINCT sec.name       as sector_name, \
+                            sec.supplement as sector_supplement
+            FROM event_seat es
+                     JOIN seat s ON es.seat_id = s.id
+                     JOIN sector sec ON s.sector_id = sec.id
+            WHERE es.event_id = %s
+              AND sec.supplement IS NOT NULL
+              AND sec.supplement > 0
+            ORDER BY sec.name
+        """
+
+        cursor.execute(query, (event_id,))
+        rows = cursor.fetchall()
+
+        supplements = {}
+        for row in rows:
+            sector_name = row[0]
+            supplement = float(row[1]) if row[1] else 0.0
+            if supplement > 0:
+                supplements[sector_name] = supplement
+
+        cursor.close()
+        return supplements
+
+    except Exception as e:
+        print(f"Error fetching sector supplements: {e}")
+        return {}
+    finally:
+        if connection:
+            connection.close()
+
 
 # Admin functions
 def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on_sale'):
