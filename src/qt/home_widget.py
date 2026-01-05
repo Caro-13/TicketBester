@@ -21,12 +21,7 @@ class HomeWidget(QWidget):
 
         # Titre
         title = QLabel("Évènements")
-        title.setStyleSheet("""
-            font-size: 32px; 
-            font-weight: bold; 
-            color: #fab387; 
-            font-family: 'Segoe UI';
-        """)
+        title.setObjectName("pageTitle")
         header_layout.addWidget(title)
 
         header_layout.addStretch()
@@ -35,20 +30,7 @@ class HomeWidget(QWidget):
         self.btn_refresh = QPushButton("Actualiser")
         self.btn_refresh.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_refresh.clicked.connect(self.refresh_data)
-        self.btn_refresh.setStyleSheet("""
-            QPushButton {
-                background-color: #313244;
-                color: #cdd6f4;
-                border: 1px solid #45475a;
-                padding: 8px 15px;
-                border-radius: 5px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #45475a;
-                border-color: #585b70;
-            }
-        """)
+        self.btn_refresh.setObjectName("actualizeBtn")
         header_layout.addWidget(self.btn_refresh)
 
         self.layout.addLayout(header_layout)
@@ -81,47 +63,6 @@ class HomeWidget(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        # Style CSS spécifique au tableau
-        self.table.setStyleSheet("""
-            QTableWidget {
-                background-color: #1e1e2e;       
-                alternate-background-color: #2a2a3c;
-                border: none;
-                gridline-color: #313244;
-                color: #cdd6f4;                  
-            }
-            QHeaderView::section {
-                background-color: #1e1e2e;
-                color: #89b4fa;
-                font-weight: bold;
-                border: none;
-                border-bottom: 2px solid #313244;
-                padding: 10px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-            QTableWidget::item {
-                padding: 10px;
-                border-bottom: 1px solid #313244;
-                color: #cdd6f4;
-            }
-            QTableWidget::item:selected {
-                background-color: #45475a; 
-                color: #fab387;
-            }
-            /* Style pour le bouton RESERVER */
-            QPushButton#reserveButton {
-                background-color: #89b4fa;
-                color: #1e1e2e;
-                font-weight: bold;
-                border-radius: 5px;
-                padding: 10px 20px;
-            }
-            QPushButton#reserveButton:hover {
-                background-color: #b4befe;
-            }
-        """)
-
         self.layout.addWidget(self.table)
         self.refresh_data()
 
@@ -130,7 +71,7 @@ class HomeWidget(QWidget):
         layout = QHBoxLayout(widget)
 
         btn = QPushButton("Réserver")
-        btn.setObjectName("reserveButton")
+        btn.setObjectName("reserveBtn")
 
         btn.clicked.connect(lambda: QTimer.singleShot(0, lambda: self.window().show_reservation_widget(evt_id, evt_name)))
 

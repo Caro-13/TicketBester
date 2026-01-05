@@ -2,6 +2,9 @@ import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
                              QFrame, QGridLayout, QApplication, QScrollArea)
 from PyQt6.QtCore import Qt, pyqtSignal
+
+from src.constants import (SEAT_WIDTH,SEAT_HEIGHT,SEAT_GRID_SPACING,SEAT_LARGE_WIDTH,BACK_BTN_WIDTH,CONFIRM_BTN_HEIGHT,SIDE_PANEL_WIDTH)
+
 from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event
 
 
@@ -9,7 +12,7 @@ from src.db.requests import get_seats_with_status_for_event, get_sector_suppleme
 class Seat(QPushButton):
     """Bouton de siege individuel stylise avec bordure visible immediatement."""
 
-    def __init__(self, seat_data, color_hex, category, width=35, height=28):
+    def __init__(self, seat_data, color_hex, category, width=SEAT_WIDTH, height=SEAT_HEIGHT):
         super().__init__(seat_data['name'])
         self.seat_id = seat_data['id']
         self.category = category
@@ -27,56 +30,35 @@ class Seat(QPushButton):
     def apply_style(self):
         if self.status == 'SOLD':
             # Grey for sold seats
-            self.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: #6c7086;
-                    color: #1e1e2e;
-                    border: 2px solid #6c7086;
-                    border-radius: 4px;
-                    font-size: 9px;
-                    font-weight: bold;
-                }}
-            """)
+            self.setObjectName("seatSold")
         elif self.status in ['RESERVED', 'HOLD']:
             # Light purple for reserved/hold seats
-            self.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: #b4befe;
-                    color: #1e1e2e;
-                    border: 2px solid #b4befe;
-                    border-radius: 4px;
-                    font-size: 9px;
-                    font-weight: bold;
-                }}
-            """)
+            self.setObjectName("seatReserved")
         else:
             # Original style for available seats
+            self.setObjectName("seatAvailable")
+            # But colors change dynamically
             self.setStyleSheet(f"""
-                QPushButton {{
-                    background-color: #1e1e2e;
-                    color: #cdd6f4;
-                    border: 2px solid {self.color_hex}; /* Bordure solide et coloree */
-                    border-radius: 4px;
-                    font-size: 9px;
-                    font-weight: bold;
-                }}
-                QPushButton:hover {{
-                    background-color: #313244;
-                    border: 2px solid #ffffff; /* La bordure devient blanche au survol */
-                }}
-                QPushButton:checked {{
-                    background-color: {self.color_hex}; /* Le fond se remplit au clic */
-                    color: #11111b; 
-                    border: 2px solid {self.color_hex};
-                }}
-            """)
+                        QPushButton#seatAvailable {{
+                            color: #ffffff;
+                            border: 2px solid {self.color_hex};
+                        }}
+                        QPushButton#seatAvailable:hover {{
+                            color: #ffffff;
+                            border: 2px solid #ffffff;
+                        }}
+                        QPushButton#seatAvailable:checked {{
+                            background-color: {self.color_hex};
+                            border: 2px solid {self.color_hex};
+                        }}
+                    """)
 
 
 # Seating sector
 class Sector(QFrame):
     """Conteneur de groupe de sieges avec alignement interne."""
 
-    def __init__(self, color_hex, seats_data, category="", sw=35, sh=28):
+    def __init__(self, color_hex, seats_data, category="", sw=SEAT_WIDTH, sh=SEAT_HEIGHT):
         super().__init__()
         self.setStyleSheet(f"""
             QFrame {{ 
@@ -91,7 +73,7 @@ class Sector(QFrame):
         layout.setSpacing(0)
 
         grid = QGridLayout()
-        grid.setSpacing(4)
+        grid.setSpacing(SEAT_GRID_SPACING)
 
         self.seats = []
 
@@ -149,22 +131,10 @@ class ConcertHall(QWidget):
         header_layout = QHBoxLayout()
 
         # Home button
-        self.btn_home = QPushButton("← Home")
-        self.btn_home.setFixedWidth(100)
+        self.btn_home = QPushButton("⌂ Home")
+        self.btn_home.setFixedWidth(BACK_BTN_WIDTH)
         self.btn_home.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_home.setStyleSheet("""
-                    QPushButton {
-                        background-color: transparent; 
-                        color: #89b4fa;
-                        border: none;
-                        font-weight: bold;
-                        padding: 5px;
-                        text-align: left;
-                    }
-                    QPushButton:hover {
-                        color: #b4befe;
-                    }
-                """)
+        self.btn_home.setObjectName("backBtn")
 
         header_layout.addWidget(self.btn_home)
         header_layout.addStretch()
@@ -190,8 +160,8 @@ class ConcertHall(QWidget):
         self.balcon_gauche = Sector("#f9e2af", self.sector_seats.get("Balcon Gauche", []), "Balcon Gauche")
         self.balcon_droit = Sector("#f9e2af", self.sector_seats.get("Balcon Droit", []), "Balcon Droit")
         self.vip = Sector("#f38ba8", self.sector_seats.get("VIP", []), "VIP")
-        self.spc_gauche = Sector("#a6e3a1", self.sector_seats.get("SPC Gauche", []), "SPC Gauche", sw=55)
-        self.spc_droit = Sector("#a6e3a1", self.sector_seats.get("SPC Droit", []), "SPC Droit", sw=55)
+        self.spc_gauche = Sector("#a6e3a1", self.sector_seats.get("SPC Gauche", []), "SPC Gauche", sw=SEAT_LARGE_WIDTH )
+        self.spc_droit = Sector("#a6e3a1", self.sector_seats.get("SPC Droit", []), "SPC Droit", sw=SEAT_LARGE_WIDTH )
         self.standard = Sector("#6cbdf9", self.sector_seats.get("Standard", []), "Standard")
 
         # Adding sectors to the grid
@@ -363,7 +333,7 @@ class ConcertHall(QWidget):
 
     def _setup_side_panel(self):
         self.side_panel = QFrame()
-        self.side_panel.setFixedWidth(320)
+        self.side_panel.setFixedWidth(SIDE_PANEL_WIDTH)
         self.side_panel.setStyleSheet("background: #181825; border-radius: 15px; border: 1px solid #313244;")
         side_layout = QVBoxLayout(self.side_panel)
         side_layout.setContentsMargins(20, 25, 20, 25)
@@ -392,17 +362,9 @@ class ConcertHall(QWidget):
         side_layout.addStretch()
 
         self.btn_confirm = QPushButton("Confirmer la selection")
-        self.btn_confirm.setFixedHeight(50)
-        self.btn_confirm.setStyleSheet("""
-            QPushButton {
-                background: #89b4fa; color: #1e1e2e; 
-                font-weight: bold; font-size: 14px; border-radius: 8px;
-            }
-            QPushButton:hover { background: #b4befe; }
-        """)
+        self.btn_confirm.setFixedHeight(CONFIRM_BTN_HEIGHT)
+        self.btn_confirm.setObjectName("confirmBtn")
         side_layout.addWidget(self.btn_confirm)
-
-        self.main_layout.addWidget(self.side_panel)
 
     def _connect_all_seats(self):
         sectors = [self.balcon_haut, self.balcon_gauche, self.balcon_droit,

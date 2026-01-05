@@ -4,6 +4,8 @@ import os
 from PyQt6.uic import loadUi
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
+from constants import (WINDOW_WIDTH,WINDOW_HEIGHT)
+
 from src.qt.home_widget import HomeWidget
 from src.qt.reservation_widget import ReservationWidget
 from src.qt.seatmap_widget import ConcertHall
@@ -19,6 +21,7 @@ class TicketBester(QMainWindow):
         loadUi(ui_path, self)
 
         self.setWindowTitle("TicketBester")
+        self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         if self.centralwidget.layout() is None:
             self.centralwidget.setLayout(QVBoxLayout())
@@ -30,7 +33,6 @@ class TicketBester(QMainWindow):
 
     def clear_central_widget(self):
         """Nettoie le widget central pour afficher une nouvelle vue."""
-
         if self.current_widget:
             self.centralwidget.layout().removeWidget(self.current_widget)
             self.current_widget.deleteLater()
@@ -39,7 +41,6 @@ class TicketBester(QMainWindow):
     def show_reservation_widget(self, event_id, event_name):
         """Affiche la page de réservation pour un événement donné."""
         self.clear_central_widget()
-        self.resize(1000, 700)
         self.current_widget = ReservationWidget(self, event_id=event_id, event_name=event_name)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle(f"TicketBester - Réservation #{event_id}")
@@ -47,14 +48,12 @@ class TicketBester(QMainWindow):
     def show_home_widget(self):
         """Revient à la page d'accueil."""
         self.clear_central_widget()
-        self.resize(1000, 700) # ToDo Ne Change pas la taille de la fenêtre
         self.current_widget = HomeWidget(self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
 
     def show_seatmap_widget(self, event_id):
         self.clear_central_widget()
-        self.resize(1400, 900)
         self.current_widget = ConcertHall(event_id=event_id, parent=self)
         self.current_widget.btn_home.clicked.connect(self.show_home_widget)
         self.current_widget.btn_confirm.clicked.connect(self.show_home_widget) # ToDo Rediriger vers payment

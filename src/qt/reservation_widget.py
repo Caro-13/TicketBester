@@ -3,12 +3,15 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QColor, QBrush
 
+from src.constants import (CONTINUE_BTN_WIDTH)
+
 from src.db.requests import get_tarifs_for_event, get_all_events_details
 
 class ReservationWidget(QWidget):
     def __init__(self, parent=None, event_id=None, event_name="Titre Événement"):
         super().__init__(parent)
 
+        self.main_window = parent
         self.event_id = event_id
         self.event_name = event_name
         self.tarifs = []
@@ -50,20 +53,9 @@ class ReservationWidget(QWidget):
         # Bouton Retour (pour revenir à HomeWidget)
         self.btn_back = QPushButton("← Retour aux évènements")
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_back.setStyleSheet("""
-            QPushButton {
-                background-color: transparent; 
-                color: #89b4fa;
-                border: none;
-                font-weight: bold;
-                padding: 5px;
-            }
-            QPushButton:hover {
-                color: #b4befe;
-            }
-        """)
+        self.btn_back.setObjectName("backBtn")
 
-        self.btn_back.clicked.connect(self.window().show_home_widget)
+        self.btn_back.clicked.connect(self.main_window.show_home_widget)
 
         header_layout.addWidget(self.btn_back)
 
@@ -104,15 +96,7 @@ class ReservationWidget(QWidget):
             quantity_box.setRange(0, 10)  # Max 10 billets par tarif
             quantity_box.setValue(0)
             quantity_box.setFixedWidth(60)
-            quantity_box.setStyleSheet("""
-                QSpinBox {
-                    background-color: #313244;
-                    border: 1px solid #45475a;
-                    border-radius: 4px;
-                    padding: 5px;
-                    color: #cdd6f4;
-                }
-            """)
+            quantity_box.setObjectName("spinbox")
 
             # Connect to update total
             quantity_box.valueChanged.connect(self._update_total)
@@ -129,6 +113,10 @@ class ReservationWidget(QWidget):
                 tarifs_grid.addWidget(details_label, i, 2, Qt.AlignmentFlag.AlignLeft)
 
         content_layout.addLayout(tarifs_grid)
+        content_layout.addSpacing(30)
+        content_layout.addLayout(self._get_client_infos_section())
+
+
         content_layout.addStretch()
 
         self.layout.addWidget(content_frame)
@@ -147,24 +135,9 @@ class ReservationWidget(QWidget):
         # Bouton Continuer/Payer (Côté droit)
         self.btn_continue = QPushButton("Continuer →")
         self.btn_continue.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_continue.setFixedWidth(150)
+        self.btn_continue.setFixedWidth(CONTINUE_BTN_WIDTH)
         self.btn_continue.setEnabled(False)  # Disabled until tickets selected
-        self.btn_continue.setStyleSheet("""
-            QPushButton {
-                background-color: #89b4fa;
-                color: #1e1e2e;
-                font-weight: bold;
-                border-radius: 5px;
-                padding: 10px;
-            }
-            QPushButton:hover {
-                background-color: #b4befe;
-            }
-            QPushButton:disabled {
-                background-color: #45475a;
-                color: #6c7086;
-            }
-        """)
+        self.btn_continue.setObjectName("continueBtn")
 
         # Pass the event_id when clicking continue
         self.btn_continue.clicked.connect(self._go_to_seatmap)
@@ -175,8 +148,57 @@ class ReservationWidget(QWidget):
 
         self.layout.addWidget(footer_frame)
 
+    def _get_client_infos_section(self):
+        client_layout = QVBoxLayout()
+
+        # Title
+        client_info_label = QLabel("Informations du client")
+        client_info_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #cdd6f4;")
+        client_layout.addWidget(client_info_label)
+
+        # Grid for inputs
+        client_grid = QGridLayout()
+        client_grid.setHorizontalSpacing(20)
+        client_grid.setVerticalSpacing(10)
+
+        # Email
+        email_label = QLabel("Email:")
+        email_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        self.email_input = QLineEdit()
+        self.email_input.setPlaceholderText("exemple@email.com")
+        self.email_input.setObjectName("inputLine")
+        self.email_input.textChanged.connect(self._update_total)
+
+        # Firstname
+        firstname_label = QLabel("Prénom:")
+        firstname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        self.firstname_input = QLineEdit()
+        self.firstname_input.setPlaceholderText("Entrez votre prénom")
+        self.firstname_input.setObjectName("inputLine")  # Fixed: was self.email_input
+        self.firstname_input.textChanged.connect(self._update_total)
+
+        # Lastname
+        lastname_label = QLabel("Nom:")
+        lastname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        self.lastname_input = QLineEdit()
+        self.lastname_input.setPlaceholderText("Entrez votre nom")
+        self.lastname_input.setObjectName("inputLine")  # Fixed: was self.email_input
+        self.lastname_input.textChanged.connect(self._update_total)
+
+        # Add to grid
+        client_grid.addWidget(email_label, 0, 0, Qt.AlignmentFlag.AlignRight)
+        client_grid.addWidget(self.email_input, 0, 1)
+        client_grid.addWidget(firstname_label, 1, 0, Qt.AlignmentFlag.AlignRight)
+        client_grid.addWidget(self.firstname_input, 1, 1)
+        client_grid.addWidget(lastname_label, 2, 0, Qt.AlignmentFlag.AlignRight)
+        client_grid.addWidget(self.lastname_input, 2, 1)
+
+        client_layout.addLayout(client_grid)
+
+        return client_layout
+
     def _go_to_seatmap(self):
-        self.window().show_seatmap_widget(self.event_id)
+        self.main_window.show_seatmap_widget(self.event_id)
 
     def _update_total(self):
         total = 0.0
@@ -190,6 +212,15 @@ class ReservationWidget(QWidget):
         # Update display
         self.total_label.setText(f"Total: {self.prix_total:.2f} CHF")
 
+        # Update button state
+        self.update_can_go_to_seatmap()
+
+    def update_can_go_to_seatmap(self):
         # Enable/disable continue button
         has_tickets = any(spinbox.value() > 0 for spinbox in self.quantity_spinboxes.values())
-        self.btn_continue.setEnabled(has_tickets)
+        has_identity = (
+        self.email_input.text().strip() != "" and
+        self.firstname_input.text().strip() != "" and
+        self.lastname_input.text().strip() != ""
+        )
+        self.btn_continue.setEnabled(has_tickets and has_identity)

@@ -1,3 +1,4 @@
+/* --- Style global --- */
 QMainWindow {
     background-color: #1e1e2e;
 }
@@ -32,7 +33,6 @@ QScrollBar:vertical {
     margin: 0px 0px 0px 0px;
 }
 
-/* Le "bouton" qu'on déplace (Handle) */
 QScrollBar::handle:vertical {
     background-color: #45475a;
     min-height: 30px;
@@ -40,14 +40,12 @@ QScrollBar::handle:vertical {
     margin: 2px;
 }
 
-/* Interaction : Survol souris */
 QScrollBar::handle:vertical:hover {
-    background-color: #585b70; /* S'éclaire un peu */
+    background-color: #585b70;
 }
 
-/* Interaction : Clic maintenu */
 QScrollBar::handle:vertical:pressed {
-    background-color: #fab387; /* Devient Orange (couleur accent) */
+    background-color: #fab387;
 }
 
 QScrollBar::sub-line:vertical, QScrollBar::add-line:vertical {
@@ -64,4 +62,341 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 QStatusBar {
     background-color: #11111b;
     color: #6c7086;
+}
+
+/* --- Boutons de validation (vert) --- */
+QPushButton#confirmBtn {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+QPushButton#confirmBtn:hover {
+    background-color: #45a049;
+}
+
+/* --- Boutons de continuation/étape suivante (bleu) --- */
+QPushButton#continueBtn {
+    background-color: #89b4fa;
+    color: #1e1e2e;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+QPushButton#continueBtn:hover {
+    background-color: #b4befe;
+}
+
+QPushButton#continueBtn:disabled {
+    background-color: #45475a;
+    color: #6c7086;
+}
+
+/* --- Boutons retour --- */
+QPushButton#backBtn {
+    background-color: transparent;
+    color: #89b4fa;
+    border: none;
+    font-weight: bold;
+    padding: 5px;
+}
+
+QPushButton#backBtn:hover {
+    color: #b4befe;
+}
+
+/* --- Boutons home --- */
+QPushButton#homeBtn {
+    background-color: #BBC6D0;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+QPushButton#homeBtn:hover {
+    border-color: #4CAF50;
+    background-color: #f9f9f9;
+}
+
+QPushButton#homeBtn:disabled {
+    background-color: #CAD3DB;
+    border-color: #d0d0d0;
+    color: #999;
+}
+
+/* Bouton actualiser*/
+QPushButton#actualizeBtn{
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+QPushButton#actualizeBtn:hover{
+    background-color: #45475a;
+    border-color: #585b70;
+}
+
+
+/* Titre dans les boutons home */
+QLabel#homeTitle {
+    color: black;
+    font-size: 14pt;
+    font-weight: bold;
+    qproperty-alignment: AlignCenter;
+}
+
+/* --- Boutons launcher (main.py) --- */
+QPushButton#launcherBtn {
+    background-color: #BBC6D0;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+}
+
+QPushButton#launcherBtn:hover {
+    border-color: #4CAF50;
+    background-color: #f9f9f9;
+}
+
+/* Titre dans les boutons launcher */
+QLabel#launcherTitle {
+    color: black;
+    font-size: 18pt;
+    font-weight: bold;
+    qproperty-alignment: AlignCenter;
+}
+
+/* Description dans les boutons launcher */
+QLabel#launcherDescription {
+    color: #666;
+    font-size: 11pt;
+    qproperty-alignment: AlignCenter;
+}
+
+/* --- Bouton reserve dans home_widget.py --- */
+QPushButton#reserveBtn {
+    background-color: #89b4fa;
+    color: #1e1e2e;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 10px 20px;
+}
+
+QPushButton#reserveBtn:hover {
+    background-color: #b4befe;
+}
+
+/* --- Boutons standard --- */
+QPushButton {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #45475a;
+    border-color: #585b70;
+}
+
+/* --- Tables --- */
+QTableWidget {
+    background-color: #1e1e2e;
+    alternate-background-color: #2a2a3c;
+    border: none;
+    gridline-color: #313244;
+    color: #cdd6f4;
+}
+
+QHeaderView::section {
+    background-color: #1e1e2e;
+    color: #89b4fa;
+    font-weight: bold;
+    border: none;
+    border-bottom: 2px solid #313244;
+    padding: 10px;
+}
+
+QTableWidget::item {
+    padding: 10px;
+    border-bottom: 1px solid #313244;
+    color: #cdd6f4;
+}
+
+QTableWidget::item:selected {
+    background-color: #45475a;
+    color: #fab387;
+}
+
+/* --- Zones de input --- */
+QLineEdit#inputLine {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 8px;
+    color: #cdd6f4;
+}
+
+QLineEdit#inputLine:focus {
+    border-color: #89b4fa;
+}
+
+/* --- Combobox (Dropdowns) --- */
+QComboBox {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 8px;
+    color: #cdd6f4;
+}
+
+QComboBox:hover {
+    border-color: #585b70;
+}
+
+QComboBox::drop-down {
+    border: none;
+    padding-right: 10px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #313244;
+    color: #cdd6f4;
+    selection-background-color: #45475a;
+    border: 1px solid #45475a;
+}
+
+/* --- Spinbox --- */
+QSpinBox#spinbox, QDoubleSpinBox#boubleSpinbox {
+    background-color: #313244;
+    border: 1px solid #45475a;
+    border-radius: 4px;
+    padding: 5px;
+    color: #cdd6f4;
+}
+
+/* --- Progress bar --- */
+QProgressBar {
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #f0f0f0;
+}
+
+QProgressBar::chunk {
+    background-color: #4CAF50;
+}
+
+/* --- Frame + panels --- */
+QFrame#panel {
+    background: #181825;
+    border-radius: 15px;
+    border: 1px solid #313244;
+}
+
+/* --- Label titles --- */
+QLabel#pageTitle {
+    color: #fab387;
+    font-size: 36px;
+    font-weight: bold;
+    font-family: 'Segoe UI';
+    qproperty-alignment: AlignCenter;
+}
+
+QLabel#sectionTitle {
+    color: #fab387;
+    font-size: 20px;
+    font-weight: bold;
+    qproperty-alignment: AlignCenter;
+}
+
+QLabel#subtitle {
+    color: #666;
+    font-size: 16px;
+    qproperty-alignment: AlignCenter;
+}
+
+/* --- Messages de status --- */
+QLabel#statusSuccess {
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 2px solid #c3e6cb;
+    qproperty-alignment: AlignCenter;
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+QLabel#statusError {
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 2px solid #f5c6cb;
+    qproperty-alignment: AlignCenter;
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+QLabel#statusNeutral {
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    color: #333;
+    qproperty-alignment: AlignCenter;
+    font-weight: bold;
+    font-size: 16pt;
+}
+
+/* --- Zones de défillement --- */
+QScrollArea {
+    background: transparent;
+    border: none;
+}
+
+/* Seats colors based on status*/
+QPushButton#seatSold {
+    background-color: #6c7086;
+    color: #ffffff;;
+    border: 2px solid #6c7086;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0px;
+}
+
+QPushButton#seatReserved {
+    background-color: #b4befe;
+    color: #ffffff;;
+    border: 2px solid #b4befe;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0px;
+}
+
+QPushButton#seatAvailable {
+    background-color: #1e1e2e;
+    color: #ffffff;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0px;
+}
+
+QPushButton#seatAvailable:hover {
+    background-color: #313244;
+    border: 2px solid #ffffff;
+}
+
+QPushButton#seatAvailable:checked {
+    color: #11111b;
 }
