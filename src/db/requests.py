@@ -396,7 +396,123 @@ def get_sector_supplements_for_event(event_id):
             connection.close()
 
 
-# Admin functions
+""" Admin functions"""
+#event
+def get_all_rooms_names():
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT  r.name 
+                FROM room r
+                ORDER BY name
+                """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return [row[0] for row in rows]
+    except Exception as e:
+        print(f"Error fetching room names: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def get_all_config_names():
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT c.name
+                FROM configuration c
+                ORDER BY name \
+                """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return [row[0] for row in rows]
+    except Exception as e:
+        print(f"Error fetching room names: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def get_type_id(type_name):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT toe.id
+                FROM type_of_event toe
+                WHERE toe.name = %s\
+                """
+        cursor.execute(query,(type_name,))
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return rows[0][0]
+    except Exception as e:
+        print(f"Error fetching type id: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def get_room_id(room_name):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT r.id
+                FROM room r
+                WHERE r.name = %s\
+                """
+        cursor.execute(query,(room_name,))
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return rows[0][0]
+    except Exception as e:
+        print(f"Error fetching room id: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def get_config_id(config_name):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT c.id
+                FROM configuration c
+                WHERE c.name = %s\
+                """
+        cursor.execute(query,(config_name,))
+        rows = cursor.fetchall()
+
+        cursor.close()
+        return rows[0][0]
+    except Exception as e:
+        print(f"Error fetching configuration id: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
 def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on_sale'):
     connection = None
     try:
@@ -423,6 +539,7 @@ def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on
         if connection:
             connection.close()
 
+#staff
 def add_staff_member(name):
     connection = None
     try:
@@ -445,6 +562,7 @@ def add_staff_member(name):
         if connection:
             connection.close()
 
+#stats
 def get_event_statistics():
     """Get statistics for all events."""
     connection = None
@@ -487,6 +605,33 @@ def get_event_statistics():
         return stats
     except Exception as e:
         print(f"Error fetching statistics: {e}")
+        return []
+    finally:
+        if connection:
+            connection.close()
+
+def get_all_type_of_event_names():
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT te.name
+                FROM type_of_event te
+                """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        type_of_events = []
+        for row in rows:
+            type_of_events.append(row[0])
+
+        cursor.close()
+        return type_of_events
+    except Exception as e:
+        print(f"Error getting all type_of_events names: {e}")
         return []
     finally:
         if connection:

@@ -400,3 +400,26 @@ QPushButton#seatAvailable:hover {
 QPushButton#seatAvailable:checked {
     color: #11111b;
 }
+
+/*Dates and times*/
+QDateTimeEdit {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 5px;
+
+    padding-left: 8px;
+    padding-right: 32px; /* space for calendar icon */
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+    font-size: 14px;
+}
+
+QDateTimeEdit:hover {
+    border: 1px solid #89b4fa;
+}
+
+QDateTimeEdit:focus {
+    border: 1px solid #fab387;
+}

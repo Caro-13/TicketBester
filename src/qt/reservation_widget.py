@@ -162,7 +162,7 @@ class ReservationWidget(QWidget):
         client_grid.setVerticalSpacing(10)
 
         # Email
-        email_label = QLabel("Email:")
+        email_label = QLabel("Email * :")
         email_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
         self.email_input = QLineEdit()
         self.email_input.setPlaceholderText("exemple@email.com")
@@ -170,7 +170,7 @@ class ReservationWidget(QWidget):
         self.email_input.textChanged.connect(self._update_total)
 
         # Firstname
-        firstname_label = QLabel("Prénom:")
+        firstname_label = QLabel("Prénom * :")
         firstname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
         self.firstname_input = QLineEdit()
         self.firstname_input.setPlaceholderText("Entrez votre prénom")
@@ -178,7 +178,7 @@ class ReservationWidget(QWidget):
         self.firstname_input.textChanged.connect(self._update_total)
 
         # Lastname
-        lastname_label = QLabel("Nom:")
+        lastname_label = QLabel("Nom * :")
         lastname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
         self.lastname_input = QLineEdit()
         self.lastname_input.setPlaceholderText("Entrez votre nom")
@@ -194,6 +194,11 @@ class ReservationWidget(QWidget):
         client_grid.addWidget(self.lastname_input, 2, 1)
 
         client_layout.addLayout(client_grid)
+
+        # Required fields note
+        note = QLabel("* Champs obligatoires")
+        note.setStyleSheet("color: #666; font-style: italic;")
+        self.layout.addWidget(note)
 
         return client_layout
 
