@@ -438,6 +438,21 @@ class ConcertHall(QWidget):
 
         self.btn_confirm.setText(f"Confirmer la selection ({temp_total_price} CHF)")
 
+        if self.nbr_seat_to_choose - temp_nbr_selection == 0:
+            self.btn_confirm.setStyleSheet("background-color: #89b4fa; color: white;")
+            self.nbr_selection_left_lbl.setStyleSheet("""
+                                            background-color: #313244; color: #cdd6f4; 
+                                            border: 1px solid #45475a; border-radius: 12px; 
+                                            font-size: 26px; font-weight: bold;
+                                        """)
+        else:
+            self.btn_confirm.setStyleSheet("background-color: transparent; color: white;")
+            self.nbr_selection_left_lbl.setStyleSheet("""
+                                background-color: #89b4fa; color: #cdd6f4; 
+                                border: 1px solid #45475a; border-radius: 12px; 
+                                font-size: 26px; font-weight: bold;
+                            """)
+
         self.info_list.setText("\n".join(selected) if selected else "Aucun siege sélectionné")
 
     def get_selected_seats(self):
@@ -454,6 +469,6 @@ class ConcertHall(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ConcertHall(event_id=1)
+    window = ConcertHall(event_id=1, quantity=1, total_price=50)
     window.show()
     sys.exit(app.exec())
