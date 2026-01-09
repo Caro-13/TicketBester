@@ -203,7 +203,12 @@ class ReservationWidget(QWidget):
         return client_layout
 
     def _go_to_seatmap(self):
-        self.main_window.show_seatmap_widget(self.event_id)
+        quantity_tickets = 0
+
+        for tarif in self.tarifs:
+            quantity_tickets +=self.quantity_spinboxes[tarif['name']].value()
+
+        self.main_window.show_seatmap_widget(self.event_id, quantity_tickets, self.prix_total)
 
     def _update_total(self):
         total = 0.0

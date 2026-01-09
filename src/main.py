@@ -175,9 +175,9 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle(f"TicketBester - Réservation #{event_id}")
 
-    def show_seatmap_widget(self, event_id):
+    def show_seatmap_widget(self, event_id, quantity, total_price):
         self.clear_central_widget()
-        self.current_widget = ConcertHall(event_id=event_id, parent=self)
+        self.current_widget = ConcertHall(event_id=event_id, quantity=quantity, total_price=total_price, parent=self)
         self.current_widget.btn_home.clicked.connect(self.show_home_widget)
         self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)  # TODO: Redirect to payment
         self.centralwidget.layout().addWidget(self.current_widget)
