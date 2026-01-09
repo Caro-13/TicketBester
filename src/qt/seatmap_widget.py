@@ -114,6 +114,7 @@ class ConcertHall(QWidget):
 
         self.nbr_seat_to_choose = quantity
         self.total_price = total_price
+        self.actual_total_price = total_price
 
         self.setWindowTitle("Systeme de Reservation - Salle de Concert")
         self.setStyleSheet("background-color: #1e1e2e;")
@@ -228,6 +229,14 @@ class ConcertHall(QWidget):
 
         # Connections
         self._connect_all_seats()
+
+        # Link for home button
+        if parent and hasattr(parent, 'show_home_widget'):
+            self.btn_home.clicked.connect(parent.show_home_widget)
+
+        # Link for confirm button
+        if parent and hasattr(parent, 'show_payment_widget'):
+            self.btn_confirm.clicked.connect(self._on_confirm_clicked)
 
     def _organize_seats_by_sector(self):
         """Organize seats by sector name."""
@@ -382,6 +391,7 @@ class ConcertHall(QWidget):
         self.btn_confirm = QPushButton(f"Confirmer la selection ({self.total_price} CHF)")
         self.btn_confirm.setFixedHeight(CONFIRM_BTN_HEIGHT)
         self.btn_confirm.setObjectName("confirmBtn")
+        self.btn_confirm.setEnabled(False)
         side_layout.addWidget(self.btn_confirm)
 
     def _connect_all_seats(self):
@@ -412,34 +422,35 @@ class ConcertHall(QWidget):
         sectors = [self.balcon_haut, self.balcon_gauche, self.balcon_droit,
                    self.spc_gauche, self.spc_droit, self.vip, self.standard]
 
-        temp_nbr_selection = 0
-        temp_total_price = self.total_price
+        actual_nbr_selection = 0
+        self.actual_total_price = self.total_price
 
         for sector in sectors:
             for s in sector.seats:
                 if s.isChecked():
                     sector_supplements = get_sector_supplements_for_event(self.event_id)
 
-                    temp_nbr_selection += 1
+                    actual_nbr_selection += 1
 
                     if s.category in sector_supplements:
                         for sector_name, supplement in sector_supplements.items():
                             if sector_name == s.category:
-                                temp_total_price += supplement
+                                self.actual_total_price += supplement
                                 print(f"{supplement} of supplement added")
 
                     selected.append(f"• {s.category} : {s.text()}")
 
         self.nbr_selection_left_lbl.setText(
-            f"Sélectionnez encore {self.nbr_seat_to_choose - temp_nbr_selection}"
-            if self.nbr_seat_to_choose - temp_nbr_selection != 0
+            f"Sélectionnez encore {self.nbr_seat_to_choose - actual_nbr_selection}"
+            if self.nbr_seat_to_choose - actual_nbr_selection != 0
             else "Tous les sièges ont été sélectionnés"
         )
 
-        self.btn_confirm.setText(f"Confirmer la selection ({temp_total_price} CHF)")
+        self.btn_confirm.setText(f"Confirmer la selection ({self.actual_total_price} CHF)")
 
-        if self.nbr_seat_to_choose - temp_nbr_selection == 0:
+        if self.nbr_seat_to_choose - actual_nbr_selection == 0:
             self.btn_confirm.setStyleSheet("background-color: #89b4fa; color: white;")
+            self.btn_confirm.setEnabled(True)
             self.nbr_selection_left_lbl.setStyleSheet("""
                                             background-color: #313244; color: #cdd6f4; 
                                             border: 1px solid #45475a; border-radius: 12px; 
@@ -447,6 +458,7 @@ class ConcertHall(QWidget):
                                         """)
         else:
             self.btn_confirm.setStyleSheet("background-color: transparent; color: white;")
+            self.btn_confirm.setEnabled(False)
             self.nbr_selection_left_lbl.setStyleSheet("""
                                 background-color: #89b4fa; color: #cdd6f4; 
                                 border: 1px solid #45475a; border-radius: 12px; 
@@ -466,6 +478,12 @@ class ConcertHall(QWidget):
                     selected_ids.append(s.seat_id)
         return selected_ids
 
+    # Send actual price to main.py
+    def _on_confirm_clicked(self):
+        main_win = self.window()
+
+        if hasattr(main_win, 'show_payment_widget'):
+            main_win.show_payment_widget(self.actual_total_price)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
