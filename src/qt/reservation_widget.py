@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
                              QSpinBox, QLineEdit, QGridLayout, QMessageBox)
 from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont, QColor, QBrush
 
 from src.constants import (CONTINUE_BTN_WIDTH)
 
@@ -342,6 +343,13 @@ class ReservationWidget(QWidget):
         except Exception as e:
             print(f"Error in _go_to_payment: {e}")
             QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
+        '''quantity_tickets = 0
+
+        for tarif in self.tarifs:
+            quantity_tickets +=self.quantity_spinboxes[tarif['name']].value()
+
+        '''#merge conflict --> need to study how to change
+
 
     def _update_total(self):
         total = 0.0

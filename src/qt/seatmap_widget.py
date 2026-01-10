@@ -108,10 +108,18 @@ class Sector(QFrame):
 
 
 class ConcertHall(QWidget):
-    def __init__(self, event_id,reservation_data= None , parent=None):
+    #def __init__(self, event_id,reservation_data= None , parent=None):#merge conflict --> study how change
+    def __init__(self, event_id, quantity, total_price, parent=None):
         super().__init__(parent)
         self.event_id = event_id
-        self.reservation_data = reservation_data
+
+        self.nbr_seat_to_choose = quantity
+        self.total_price = total_price
+        self.actual_total_price = total_price
+        #self.reservation_data = reservation_data #merge conflict --> study how change
+
+
+
         self.setWindowTitle("Systeme de Reservation - Salle de Concert")
         self.setStyleSheet("background-color: #1e1e2e;")
 
@@ -190,6 +198,20 @@ class ConcertHall(QWidget):
         """)
         self.plan_container.addWidget(scene_lbl)
 
+        # Nbr left of seat label
+        self.nbr_selection_left_lbl = QLabel(
+            ("Sélectionnez encore " + str(self.nbr_seat_to_choose)
+             if self.nbr_seat_to_choose != 0 else "Tout les sièges ont été sélectionné")
+        )
+        self.nbr_selection_left_lbl.setFixedHeight(70)
+        self.nbr_selection_left_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.nbr_selection_left_lbl.setStyleSheet("""
+                    background-color: #89b4fa; color: #cdd6f4; 
+                    border: 1px solid #45475a; border-radius: 12px; 
+                    font-size: 26px; font-weight: bold;
+                """)
+        self.plan_container.addWidget(self.nbr_selection_left_lbl)
+
         # Stretch Management
         self.plan_container.addStretch()
 
@@ -211,6 +233,14 @@ class ConcertHall(QWidget):
 
         # Connections
         self._connect_all_seats()
+
+        # Link for home button
+        if parent and hasattr(parent, 'show_home_widget'):
+            self.btn_home.clicked.connect(parent.show_home_widget)
+
+        # Link for confirm button
+        if parent and hasattr(parent, 'show_payment_widget'):
+            self.btn_confirm.clicked.connect(self._on_confirm_clicked)
 
     def _organize_seats_by_sector(self):
         """Organize seats by sector name."""
@@ -339,9 +369,9 @@ class ConcertHall(QWidget):
         side_layout = QVBoxLayout(self.side_panel)
         side_layout.setContentsMargins(20, 25, 20, 25)
 
-        title = QLabel("SÉLECTION")
-        title.setStyleSheet("color: #fab387; font-weight: bold; font-size: 20px; border: none;")
-        side_layout.addWidget(title)
+        self.title = QLabel("SÉLECTION")
+        self.title.setStyleSheet("color: #fab387; font-weight: bold; font-size: 20px; border: none;")
+        side_layout.addWidget(self.title)
 
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
@@ -353,7 +383,7 @@ class ConcertHall(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setStyleSheet("background: transparent; border: none;")
-        self.info_list = QLabel("Aucun siege selectionne")
+        self.info_list = QLabel("Aucun siege sélectionné")
         self.info_list.setStyleSheet("color: #bac2de; border: none; font-size: 13px;")
         self.info_list.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.info_list.setWordWrap(True)
@@ -362,9 +392,10 @@ class ConcertHall(QWidget):
         side_layout.addWidget(scroll)
         side_layout.addStretch()
 
-        self.btn_confirm = QPushButton("Confirmer la selection")
+        self.btn_confirm = QPushButton(f"Confirmer la selection ({self.total_price} CHF)")
         self.btn_confirm.setFixedHeight(CONFIRM_BTN_HEIGHT)
         self.btn_confirm.setObjectName("confirmBtn")
+        self.btn_confirm.setEnabled(False)
         side_layout.addWidget(self.btn_confirm)
 
     def _connect_all_seats(self):
@@ -375,13 +406,69 @@ class ConcertHall(QWidget):
                 s.clicked.connect(self.update_info)
 
     def update_info(self):
+        clicked_seat = self.sender()
+
+        # Count how much seats are check
+        currently_selected = []
+        for sector in [self.balcon_haut, self.balcon_gauche, self.balcon_droit,
+                       self.spc_gauche, self.spc_droit, self.vip, self.standard]:
+            for s in sector.seats:
+                if s.isChecked():
+                    currently_selected.append(s)
+
+        # If there's more than seat to choose, we uncheck the last checked
+        if len(currently_selected) > self.nbr_seat_to_choose:
+            if clicked_seat:
+                clicked_seat.setChecked(False)
+            return
+
         selected = []
         sectors = [self.balcon_haut, self.balcon_gauche, self.balcon_droit,
                    self.spc_gauche, self.spc_droit, self.vip, self.standard]
+
+        actual_nbr_selection = 0
+        self.actual_total_price = self.total_price
+
         for sector in sectors:
             for s in sector.seats:
                 if s.isChecked():
+                    sector_supplements = get_sector_supplements_for_event(self.event_id)
+
+                    actual_nbr_selection += 1
+
+                    if s.category in sector_supplements:
+                        for sector_name, supplement in sector_supplements.items():
+                            if sector_name == s.category:
+                                self.actual_total_price += supplement
+                                print(f"{supplement} of supplement added")
+
                     selected.append(f"• {s.category} : {s.text()}")
+
+        self.nbr_selection_left_lbl.setText(
+            f"Sélectionnez encore {self.nbr_seat_to_choose - actual_nbr_selection}"
+            if self.nbr_seat_to_choose - actual_nbr_selection != 0
+            else "Tous les sièges ont été sélectionnés"
+        )
+
+        self.btn_confirm.setText(f"Confirmer la selection ({self.actual_total_price} CHF)")
+
+        if self.nbr_seat_to_choose - actual_nbr_selection == 0:
+            self.btn_confirm.setStyleSheet("background-color: #89b4fa; color: white;")
+            self.btn_confirm.setEnabled(True)
+            self.nbr_selection_left_lbl.setStyleSheet("""
+                                            background-color: #313244; color: #cdd6f4; 
+                                            border: 1px solid #45475a; border-radius: 12px; 
+                                            font-size: 26px; font-weight: bold;
+                                        """)
+        else:
+            self.btn_confirm.setStyleSheet("background-color: transparent; color: white;")
+            self.btn_confirm.setEnabled(False)
+            self.nbr_selection_left_lbl.setStyleSheet("""
+                                background-color: #89b4fa; color: #cdd6f4; 
+                                border: 1px solid #45475a; border-radius: 12px; 
+                                font-size: 26px; font-weight: bold;
+                            """)
+
         self.info_list.setText("\n".join(selected) if selected else "Aucun siege sélectionné")
 
     def get_selected_seats(self):
@@ -395,11 +482,15 @@ class ConcertHall(QWidget):
                     selected_ids.append(s.seat_id)
         return selected_ids
 
+    # Send actual price to main.py
+    def _on_confirm_clicked(self):
+        main_win = self.window()
 
-
+        if hasattr(main_win, 'show_payment_widget'):
+            main_win.show_payment_widget(self.actual_total_price)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = ConcertHall(event_id=1)
+    window = ConcertHall(event_id=1, quantity=1, total_price=50)
     window.show()
     sys.exit(app.exec())

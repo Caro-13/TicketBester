@@ -13,6 +13,7 @@ from constants import (WINDOW_WIDTH,WINDOW_HEIGHT,MENU_BTN_WIDTH,MENU_BTN_HEIGHT
 from src.qt.home_widget import HomeWidget
 from src.qt.reservation_widget import ReservationWidget
 from src.qt.seatmap_widget import ConcertHall
+from src.qt.payment_widget import PaymentWidget
 from src.qt.admin_home_widget import AdminHomeWidget
 from src.qt.admin_new_event_widget import AdminNewEventWidget
 from src.qt.admin_new_staff_widget import AdminNewStaffWidget
@@ -175,18 +176,20 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle(f"TicketBester - Réservation #{event_id}")
 
-    def show_seatmap_widget(self, event_id,reservation_data):
+    #def show_seatmap_widget(self, event_id,reservation_data): #merge confict --> study which to keep, how to modify
+    def show_seatmap_widget(self, event_id, quantity, total_price):
         self.clear_central_widget()
-        self.current_widget = ConcertHall(event_id=event_id, parent=self)
-        self.current_widget.btn_home.clicked.connect(self.show_home_widget)
-        self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)  # TODO: Redirect to payment
+        self.current_widget = ConcertHall(event_id=event_id, quantity=quantity, total_price=total_price, parent=self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester - Sélection des sièges")
 
-    def show_payment_widget(self,event_id,reservation_data):
-        # TODO: Implement payment widget
+    #def show_payment_widget(self,event_id,reservation_data): #merge confict --> study which to keep, how to modify
+    def show_payment_widget(self, total_price):
         self.clear_central_widget()
-        pass
+        # On crée le widget de paiement avec le prix reçu
+        self.current_widget = PaymentWidget(self, total_price=total_price)
+        self.centralwidget.layout().addWidget(self.current_widget)
+        self.setWindowTitle(f"TicketBester - Paiement ({total_price:.2f} CHF)")
 
 
     """admin widgets"""
