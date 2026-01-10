@@ -3,10 +3,11 @@ BEFORE INSERT ON ticket
 FOR EACH ROW
 EXECUTE FUNCTION prevent_double_booking();
 
-CREATE OR REPLACE TRIGGER trg_check_hold_expiration
+-- Removed from project scope
+/*CREATE OR REPLACE TRIGGER trg_check_hold_expiration
 BEFORE UPDATE ON event_seat
 FOR EACH ROW
-EXECUTE FUNCTION check_hold_expiration();
+EXECUTE FUNCTION check_hold_expiration();*/
 
 CREATE OR REPLACE TRIGGER trg_sync_seats_with_reservation
 AFTER INSERT OR UPDATE ON reservation
@@ -22,3 +23,8 @@ CREATE OR REPLACE TRIGGER trg_validate_ticket_seat
 BEFORE INSERT ON ticket
 FOR EACH ROW
 EXECUTE FUNCTION check_event_capacity();
+
+CREATE TRIGGER trg_sync_seats_on_ticket
+AFTER INSERT ON ticket
+FOR EACH ROW
+EXECUTE FUNCTION sync_seats_with_ticket();

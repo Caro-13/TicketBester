@@ -2,7 +2,7 @@
 CREATE TYPE seat_status AS ENUM (
     'AVAILABLE',
     'RESERVED',
-    'HOLD',
+    --'HOLD',
     'SOLD',
     'UNAVAILABLE'
 );

@@ -189,8 +189,7 @@ def get_seats_with_status_for_event(event_id):
                        ts.type        as seat_type, \
                        sec.name       as sector_name, \
                        sec.supplement as sector_supplement, \
-                       es.status, \
-                       es.hold_expires_at
+                       es.status
                 FROM event_seat es
                          JOIN seat s ON es.seat_id = s.id
                          JOIN type_of_seat ts ON s.type_id = ts.id
@@ -210,8 +209,7 @@ def get_seats_with_status_for_event(event_id):
                 'type': row[2],
                 'sector': row[3],
                 'supplement': float(row[4]) if row[4] else 0.0,
-                'status': row[5],
-                'hold_expires_at': row[6]
+                'status': row[5]
             }
             seats.append(seat)
 
@@ -299,23 +297,12 @@ def add_ticket_to_reservation(reservation_id, event_id, seat_id, tarif_name):
         connection = _get_connection()
         cursor = connection.cursor()
         
-        # Insert ticket
         ticket_query = """
             INSERT INTO ticket (reservation_id, event_id, seat_id, tarif_name)
             VALUES (%s, %s, %s, %s)
             RETURNING id
         """
         cursor.execute(ticket_query, (reservation_id, event_id, seat_id, tarif_name))
-        
-        # Update seat status to HOLD
-        seat_query = """
-            UPDATE event_seat
-            SET status = 'HOLD',
-                hold_expires_at = NOW() + INTERVAL '15 minutes'
-            WHERE event_id = %s AND seat_id = %s
-        """
-        cursor.execute(seat_query, (event_id, seat_id))
-        
         connection.commit()
         cursor.close()
         return True

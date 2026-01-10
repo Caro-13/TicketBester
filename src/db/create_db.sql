@@ -9,7 +9,7 @@
 \echo ''
 
 \echo '2/6 Creating tables...'
-\i 'src/db/02_tables.sql'
+\i 'src/db/02_schemas.sql'
 \echo '✓ Tables created'
 \echo ''
 

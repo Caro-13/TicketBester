@@ -5,7 +5,7 @@ BEGIN
         SELECT 1 FROM event_seat
         WHERE event_id = NEW.event_id
           AND seat_id = NEW.seat_id
-          AND status IN ('SOLD', 'HOLD','RESERVED')
+          AND status IN ('SOLD','RESERVED')
     ) THEN
         RAISE EXCEPTION 'Seat % already booked for event %',
             NEW.seat_id, NEW.event_id;
@@ -14,7 +14,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION check_hold_expiration()
+-- Removed from project scope
+/*CREATE OR REPLACE FUNCTION check_hold_expiration()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.status = 'HOLD'
@@ -25,7 +26,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;*/
 
 CREATE OR REPLACE FUNCTION sync_seat_with_reservation()
 RETURNS TRIGGER AS $$
@@ -53,7 +54,7 @@ BEGIN
           AND (OLD.status IS DISTINCT FROM NEW.status OR OLD.status IS DISTINCT FROM 'cancelled')
     THEN
         UPDATE event_seat es
-        SET status = 'AVAILABLE', hold_expires_at = NULL
+        SET status = 'AVAILABLE' /*, hold_expires_at = NULL*/
         FROM ticket t
         WHERE t.reservation_id = NEW.id
           AND es.event_id = t.event_id
@@ -66,7 +67,20 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION update_reservation_on_payment()
 RETURNS TRIGGER AS $$
+DECLARE
+    current_status reservation_status;
 BEGIN
+    -- Check current reservation status
+    SELECT status INTO current_status
+    FROM reservation
+    WHERE id = NEW.reservation_id;
+
+    -- If already paid, raise an exception
+    IF current_status = 'paid' THEN
+        RAISE EXCEPTION 'Reservation % is already paid', NEW.reservation_id;
+    END IF;
+
+    -- normal update
     UPDATE reservation
     SET status = 'paid'
     WHERE id = NEW.reservation_id AND status = 'pending';
@@ -87,6 +101,33 @@ BEGIN
     IF NOT seat_exists THEN
         RAISE EXCEPTION 'Seat % is not available for event %', NEW.seat_id, NEW.event_id;
     END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- tigger when tickets inserted (because reservation already created and no update)
+CREATE OR REPLACE FUNCTION sync_seats_with_ticket()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Get the reservation status
+    DECLARE
+        res_status reservation_status;
+    BEGIN
+        SELECT status INTO res_status
+        FROM reservation
+        WHERE id = NEW.reservation_id;
+
+        -- Update seat based on reservation status
+        IF res_status = 'pending' THEN
+            UPDATE event_seat
+            SET status = 'RESERVED'
+            WHERE event_id = NEW.event_id AND seat_id = NEW.seat_id;
+        ELSIF res_status = 'paid' THEN
+            UPDATE event_seat
+            SET status = 'SOLD'
+            WHERE event_id = NEW.event_id AND seat_id = NEW.seat_id;
+        END IF;
+    END;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
