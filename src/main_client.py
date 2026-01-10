@@ -52,7 +52,7 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
 
-    def show_seatmap_widget(self, event_id):
+    def show_seatmap_widget(self, event_id,reservation_data):
         self.clear_central_widget()
         self.current_widget = ConcertHall(event_id=event_id, parent=self)
         self.current_widget.btn_home.clicked.connect(self.show_home_widget)
@@ -60,7 +60,7 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester - Sélection des sièges")
 
-    def show_payment_widget(self): # ToDo Faire le widget
+    def show_payment_widget(self,event_id,reservation_data): # ToDo Faire le widget
         self.clear_central_widget()
         # self.current_widget = ConcertHall(self)
         # self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)

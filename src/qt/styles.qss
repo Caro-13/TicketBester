@@ -423,3 +423,20 @@ QDateTimeEdit:hover {
 QDateTimeEdit:focus {
     border: 1px solid #fab387;
 }
+
+/* Little textes for sections */
+QLabel#littleSection {
+    font-size: 18px;
+    font-weight: bold;
+    color: #cdd6f4;
+}
+
+QLabel#infosInput{
+    font-size: 14px;
+    color: #cdd6f4;
+}
+
+QLabel#starNote{
+    color: #666;
+    font-style: italic;
+}

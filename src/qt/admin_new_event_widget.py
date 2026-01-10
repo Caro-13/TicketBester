@@ -106,7 +106,7 @@ class AdminNewEventWidget(QWidget):
 
         # Required fields note
         note = QLabel("* Champs obligatoires")
-        note.setStyleSheet("color: #666; font-style: italic;")
+        note.setObjectName("startNote")
         self.layout.addWidget(note)
 
         self.layout.addSpacing(10)
@@ -134,7 +134,6 @@ class AdminNewEventWidget(QWidget):
 
 
     def create_event_action(self):
-        """Validate and create new event."""
         # Validation
         if not self.name_input.text().strip():
             QMessageBox.warning(self, "Erreur", "Veuillez entrer un nom d'événement.")

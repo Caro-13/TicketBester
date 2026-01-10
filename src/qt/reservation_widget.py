@@ -1,11 +1,12 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame,
                              QSpinBox, QLineEdit, QGridLayout, QMessageBox)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QColor, QBrush
 
 from src.constants import (CONTINUE_BTN_WIDTH)
 
-from src.db.requests import get_tarifs_for_event, get_all_events_details
+from src.db.requests import get_tarifs_for_event, get_need_reservation_for_event, create_client, create_reservation, \
+    get_available_seats_for_event, add_ticket_to_reservation
+
 
 class ReservationWidget(QWidget):
     def __init__(self, parent=None, event_id=None, event_name="Titre Événement"):
@@ -16,6 +17,7 @@ class ReservationWidget(QWidget):
         self.event_name = event_name
         self.tarifs = []
         self.prix_total = 0.00
+        self.need_reservation = get_need_reservation_for_event(self.event_id)
 
         # --- Layout Principal ---
         self.layout = QVBoxLayout(self)
@@ -63,7 +65,7 @@ class ReservationWidget(QWidget):
 
         # Titre
         event_title = QLabel(f"Réservation: {self.event_name}")
-        event_title.setStyleSheet("font-size: 28px; font-weight: bold; color: #fab387;")
+        event_title.setObjectName("pageTitle")
         header_layout.addWidget(event_title)
 
         header_layout.addStretch()
@@ -76,7 +78,7 @@ class ReservationWidget(QWidget):
 
         # --- Tarifs (Grid Layout) ---
         tarifs_label = QLabel("Sélectionnez vos tarifs")
-        tarifs_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #cdd6f4;")
+        tarifs_label.setObjectName("littleSection")
         content_layout.addWidget(tarifs_label)
 
         tarifs_grid = QGridLayout()
@@ -89,7 +91,7 @@ class ReservationWidget(QWidget):
             # Ligne 1: Nom et Prix
             price = tarif['price']
             name_label = QLabel(f"{tarif['name']} ({price:.2f} CHF)")
-            name_label.setStyleSheet("font-size: 15px; font-weight: 500;")
+            name_label.setObjectName("infosInput")
 
             # Ligne 2: Champ de Quantité (SpinBox)
             quantity_box = QSpinBox()
@@ -109,7 +111,7 @@ class ReservationWidget(QWidget):
             # Add note for special tarifs (those with *)
             if '*' in tarif['name'] or tarif['name'].lower() in ['student', 'staff']:
                 details_label = QLabel("* Contrôle à l'entrée")
-                details_label.setStyleSheet("font-size: 10px; color: #6c7086; font-style: italic;")
+                details_label.setObjectName("starNote")
                 tarifs_grid.addWidget(details_label, i, 2, Qt.AlignmentFlag.AlignLeft)
 
         content_layout.addLayout(tarifs_grid)
@@ -133,14 +135,15 @@ class ReservationWidget(QWidget):
         self.total_label.setStyleSheet("QLabel#TotalLabel {font-size: 20px; font-weight: bold; color: #fab387;}")
 
         # Bouton Continuer/Payer (Côté droit)
-        self.btn_continue = QPushButton("Continuer →")
+        button_text = "Continuer →" if self.need_reservation else "Aller au paiement →"
+        self.btn_continue = QPushButton(button_text)
         self.btn_continue.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_continue.setFixedWidth(CONTINUE_BTN_WIDTH)
         self.btn_continue.setEnabled(False)  # Disabled until tickets selected
         self.btn_continue.setObjectName("continueBtn")
 
         # Pass the event_id when clicking continue
-        self.btn_continue.clicked.connect(self._go_to_seatmap)
+        self.btn_continue.clicked.connect(self._handle_continue)
 
         footer_layout.addWidget(self.total_label)
         footer_layout.addStretch()
@@ -153,7 +156,7 @@ class ReservationWidget(QWidget):
 
         # Title
         client_info_label = QLabel("Informations du client")
-        client_info_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #cdd6f4;")
+        client_info_label.setObjectName("littleSection")
         client_layout.addWidget(client_info_label)
 
         # Grid for inputs
@@ -163,7 +166,7 @@ class ReservationWidget(QWidget):
 
         # Email
         email_label = QLabel("Email * :")
-        email_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        email_label.setObjectName("infosInput")
         self.email_input = QLineEdit()
         self.email_input.setPlaceholderText("exemple@email.com")
         self.email_input.setObjectName("inputLine")
@@ -171,18 +174,18 @@ class ReservationWidget(QWidget):
 
         # Firstname
         firstname_label = QLabel("Prénom * :")
-        firstname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        email_label.setObjectName("infosInput")
         self.firstname_input = QLineEdit()
         self.firstname_input.setPlaceholderText("Entrez votre prénom")
-        self.firstname_input.setObjectName("inputLine")  # Fixed: was self.email_input
+        self.firstname_input.setObjectName("inputLine")
         self.firstname_input.textChanged.connect(self._update_total)
 
         # Lastname
         lastname_label = QLabel("Nom * :")
-        lastname_label.setStyleSheet("font-size: 14px; color: #cdd6f4;")
+        email_label.setObjectName("infosInput")
         self.lastname_input = QLineEdit()
         self.lastname_input.setPlaceholderText("Entrez votre nom")
-        self.lastname_input.setObjectName("inputLine")  # Fixed: was self.email_input
+        self.lastname_input.setObjectName("inputLine")
         self.lastname_input.textChanged.connect(self._update_total)
 
         # Add to grid
@@ -197,13 +200,148 @@ class ReservationWidget(QWidget):
 
         # Required fields note
         note = QLabel("* Champs obligatoires")
-        note.setStyleSheet("color: #666; font-style: italic;")
+        note.setObjectName("starNote")
         self.layout.addWidget(note)
 
         return client_layout
 
+    def _get_reservation_data(self):
+        # Collect selected tarifs and quantities
+        selected_tarifs = {}
+        for tarif in self.tarifs:
+            quantity = self.quantity_spinboxes[tarif['name']].value()
+            if quantity > 0:
+                selected_tarifs[tarif['name']] = {
+                    'quantity': quantity,
+                    'price': tarif['price'],
+                    'tarif_id': tarif['id']
+                }
+
+        # Return all data as a dictionary
+        return {
+            'event_id': self.event_id,
+            'event_name': self.event_name,
+            'email': self.email_input.text().strip(),
+            'firstname': self.firstname_input.text().strip(),
+            'lastname': self.lastname_input.text().strip(),
+            'tarifs': selected_tarifs,
+            'total': self.prix_total,
+            'need_reservation': self.need_reservation
+        }
+
+    def _handle_continue(self):
+        if self.need_reservation:
+            self._go_to_seatmap()
+        else:
+            self._go_to_payment()
+
     def _go_to_seatmap(self):
-        self.main_window.show_seatmap_widget(self.event_id)
+        try:
+            # 1. Collect reservation data
+            reservation_data = self._get_reservation_data()
+
+            # 2. Create or get client
+            client_id = create_client(
+                email=reservation_data['email'],
+                firstname=reservation_data['firstname'],
+                lastname=reservation_data['lastname']
+            )
+
+            if not client_id:
+                QMessageBox.warning(self, "Erreur", "Impossible de créer le client.")
+                return
+
+            # 3. Create reservation (status will be 'pending')
+            reservation_id = create_reservation(
+                event_id=self.event_id,
+                client_id=client_id
+            )
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Impossible de créer la réservation.")
+                return
+
+            # 4. Store all data including reservation_id and client_id
+            reservation_data['reservation_id'] = reservation_id
+            reservation_data['client_id'] = client_id
+            self.main_window.reservation_data = reservation_data
+
+            # 5. Navigate to seatmap where user will select seats
+            self.main_window.show_seatmap_widget(self.event_id,reservation_data)
+
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _go_to_seatmap: {e}")
+            print(traceback.format_exc())
+            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
+
+    def _go_to_payment(self):
+        try:
+            # 1. Collect reservation data
+            reservation_data = self._get_reservation_data()
+
+            # 2. Create or get client
+            client_id = create_client(
+                email=reservation_data['email'],
+                firstname=reservation_data['firstname'],
+                lastname=reservation_data['lastname']
+            )
+
+            if not client_id:
+                QMessageBox.warning(self, "Erreur", "Impossible de créer le client.")
+                return
+
+            # 3. Create reservation
+            reservation_id = create_reservation(
+                event_id=self.event_id,
+                client_id=client_id
+            )
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Impossible de créer la réservation.")
+                return
+
+            # 4. For events without seat selection, assign random available seats
+            available_seats = get_available_seats_for_event(self.event_id)
+
+            if not available_seats:
+                QMessageBox.warning(self, "Erreur", "Aucun siège disponible.")
+                return
+
+            # 5. Create tickets for each tarif quantity
+            seat_index = 0
+            for tarif_name, tarif_info in reservation_data['tarifs'].items():
+                quantity = tarif_info['quantity']
+
+                for _ in range(quantity):
+                    if seat_index >= len(available_seats):
+                        QMessageBox.warning(self, "Erreur", "Pas assez de sièges disponibles.")
+                        return
+
+                    seat = available_seats[seat_index]
+                    success = add_ticket_to_reservation(
+                        reservation_id=reservation_id,
+                        event_id=self.event_id,
+                        seat_id=seat['id'],
+                        tarif_name=tarif_name
+                    )
+
+                    if not success:
+                        QMessageBox.warning(self, "Erreur", f"Impossible d'ajouter le billet {seat['name']}.")
+                        return
+
+                    seat_index += 1
+
+            # 6. Store reservation data and navigate to payment
+            reservation_data['reservation_id'] = reservation_id
+            reservation_data['client_id'] = client_id
+            self.main_window.reservation_data = reservation_data
+
+            self.main_window.show_payment_widget(self.event_id, reservation_data)
+
+        except Exception as e:
+            print(f"Error in _go_to_payment: {e}")
+            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
 
     def _update_total(self):
         total = 0.0
@@ -218,9 +356,9 @@ class ReservationWidget(QWidget):
         self.total_label.setText(f"Total: {self.prix_total:.2f} CHF")
 
         # Update button state
-        self.update_can_go_to_seatmap()
+        self.update_can_continue()
 
-    def update_can_go_to_seatmap(self):
+    def update_can_continue(self):
         # Enable/disable continue button
         has_tickets = any(spinbox.value() > 0 for spinbox in self.quantity_spinboxes.values())
         has_identity = (

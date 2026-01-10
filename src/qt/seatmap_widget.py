@@ -108,9 +108,10 @@ class Sector(QFrame):
 
 
 class ConcertHall(QWidget):
-    def __init__(self, event_id, parent=None):
+    def __init__(self, event_id,reservation_data= None , parent=None):
         super().__init__(parent)
         self.event_id = event_id
+        self.reservation_data = reservation_data
         self.setWindowTitle("Systeme de Reservation - Salle de Concert")
         self.setStyleSheet("background-color: #1e1e2e;")
 

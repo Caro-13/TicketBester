@@ -395,6 +395,32 @@ def get_sector_supplements_for_event(event_id):
         if connection:
             connection.close()
 
+def get_need_reservation_for_event(event_id):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        query = """
+                SELECT t.need_reservation
+                FROM event e
+                         JOIN type_of_event t ON e.type_id = t.id
+                WHERE e.id = %s \
+                """
+
+        cursor.execute(query, (event_id,))
+        row = cursor.fetchone()
+
+        cursor.close()
+        return row[0] if row else True  # Default to True if not found
+
+    except Exception as e:
+        print(f"Error fetching need_reservation: {e}")
+        return True  # Safe default
+    finally:
+        if connection:
+            connection.close()
+
 
 """ Admin functions"""
 #event
