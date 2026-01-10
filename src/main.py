@@ -176,19 +176,18 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle(f"TicketBester - Réservation #{event_id}")
 
-    #def show_seatmap_widget(self, event_id,reservation_data): #merge confict --> study which to keep, how to modify
-    def show_seatmap_widget(self, event_id, quantity, total_price):
+    def show_seatmap_widget(self, reservation_data):
         self.clear_central_widget()
-        self.current_widget = ConcertHall(event_id=event_id, quantity=quantity, total_price=total_price, parent=self)
+        self.current_widget = ConcertHall(reservation_data, parent=self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester - Sélection des sièges")
 
-    #def show_payment_widget(self,event_id,reservation_data): #merge confict --> study which to keep, how to modify
-    def show_payment_widget(self, total_price):
+    def show_payment_widget(self,reservation_data):
         self.clear_central_widget()
         # On crée le widget de paiement avec le prix reçu
-        self.current_widget = PaymentWidget(self, total_price=total_price)
+        self.current_widget = PaymentWidget(reservation_data,parent=self)
         self.centralwidget.layout().addWidget(self.current_widget)
+        total_price = reservation_data['total']
         self.setWindowTitle(f"TicketBester - Paiement ({total_price:.2f} CHF)")
 
 

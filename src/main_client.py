@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from constants import (WINDOW_WIDTH,WINDOW_HEIGHT)
 
 from src.qt.home_widget import HomeWidget
+from src.qt.payment_widget import PaymentWidget
 from src.qt.reservation_widget import ReservationWidget
 from src.qt.seatmap_widget import ConcertHall
 
@@ -52,20 +53,21 @@ class TicketBester(QMainWindow):
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester")
 
-    def show_seatmap_widget(self, event_id,reservation_data):
+    def show_seatmap_widget(self,reservation_data):
         self.clear_central_widget()
-        self.current_widget = ConcertHall(event_id=event_id, parent=self)
-        self.current_widget.btn_home.clicked.connect(self.show_home_widget)
-        self.current_widget.btn_confirm.clicked.connect(self.show_home_widget) # ToDo Rediriger vers payment
+        self.current_widget = ConcertHall(reservation_data, parent=self)
         self.centralwidget.layout().addWidget(self.current_widget)
-        self.setWindowTitle("TicketBester - Sélection des sièges")
+        self.setWindowTitle(f"TicketBester - Sélection des sièges")
 
-    def show_payment_widget(self,event_id,reservation_data): # ToDo Faire le widget
+    def show_payment_widget(self,reservation_data): # ToDo Faire le widget
         self.clear_central_widget()
-        # self.current_widget = ConcertHall(self)
-        # self.current_widget.btn_confirm.clicked.connect(self.show_home_widget)
-        # self.centralwidget.layout().addWidget(self.current_widget)
-        # self.setWindowTitle("TicketBester")
+        # On crée le widget de paiement avec le prix reçu
+        self.current_widget = PaymentWidget(reservation_data, parent=self)
+        self.centralwidget.layout().addWidget(self.current_widget)
+        total_price = reservation_data['total']
+        self.setWindowTitle("TicketBester - Paiement ({total_price:.2f} CHF)")
+
+
 
 
 def main():

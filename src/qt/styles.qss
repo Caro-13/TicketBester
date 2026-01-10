@@ -382,6 +382,11 @@ QPushButton#seatReserved {
     font-weight: bold;
     padding: 0px;
 }
+QPushButton#seatReserved:disabled {
+    background-color: #b4befe;
+    color: #ffffff;
+    border: 2px solid #b4befe;
+}
 
 QPushButton#seatAvailable {
     background-color: #1e1e2e;

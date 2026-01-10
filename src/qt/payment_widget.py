@@ -1,13 +1,15 @@
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-                             QFrame, QLineEdit, QGridLayout)
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QLineEdit, QGridLayout, QMessageBox
 from PyQt6.QtCore import Qt
+
+from src.db.requests import create_payment
 
 
 class PaymentWidget(QWidget):
-    def __init__(self, parent=None, total_price=0.0):
+    def __init__(self, reservation_data, parent=None):
         super().__init__(parent)
         self.main_window = parent
-        self.total_price = total_price
+        self.reservation_data = reservation_data
+        self.total_price = self.reservation_data.get('total', 0.0)
 
         # Main Layout
         self.layout = QVBoxLayout(self)
@@ -44,9 +46,7 @@ class PaymentWidget(QWidget):
         self.btn_twint.setFixedHeight(60)
         self.btn_twint.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_twint.setObjectName("paymentOptionBtn")
-
-        if self.main_window:
-            self.btn_twint.clicked.connect(self.main_window.show_home_widget)
+        self.btn_twint.clicked.connect(self._process_twint_payment)
 
         layout.addWidget(self.btn_card)
         layout.addWidget(self.btn_twint)
@@ -112,9 +112,7 @@ class PaymentWidget(QWidget):
         self.btn_pay.setObjectName("confirmBtn")
         self.btn_pay.setFixedHeight(50)
         self.btn_pay.setEnabled(False)
-
-        if self.main_window:
-            self.btn_pay.clicked.connect(self.main_window.show_home_widget)
+        self.btn_pay.clicked.connect(self._process_card_payment)
 
         layout.addSpacing(20)
         layout.addWidget(self.btn_pay)
@@ -141,3 +139,65 @@ class PaymentWidget(QWidget):
             self.btn_pay.setStyleSheet("background-color: #89b4fa; color: #1e1e2e; font-weight: bold;")
         else:
             self.btn_pay.setStyleSheet("")
+
+    def _process_card_payment(self):
+        self._finalize_payment('card')
+
+    def _process_twint_payment(self):
+        self._finalize_payment('twint')
+
+    def _finalize_payment(self, method):
+        try:
+            # Disable all buttons immediately to prevent double-click
+            self.btn_pay.setEnabled(False)
+            self.btn_twint.setEnabled(False)
+            self.btn_card.setEnabled(False)
+
+            reservation_id = self.reservation_data.get('reservation_id')
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Aucune réservation trouvée.")
+                return
+
+            payment_id = create_payment(
+                reservation_id=reservation_id,
+                total=self.total_price,
+                method=method
+            )
+
+            if not payment_id:
+                QMessageBox.warning(self, "Erreur", "Erreur lors du paiement.")
+                return
+
+            # Show success message
+            QMessageBox.information(
+                self,
+                "Paiement réussi",
+                f"Votre paiement de {self.total_price:.2f} CHF a été accepté!\n"
+                f"Réservation #{reservation_id}"
+            )
+
+            if self.main_window:
+                self.main_window.show_home_widget()
+
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _finalize_payment: {e}")
+            print(traceback.format_exc())
+
+            #if error enable back buttons to try again paying
+            self._enable_buttons()
+
+            QMessageBox.critical(
+                self,
+                "Erreur",
+                f"Une erreur est survenue lors du paiement: {str(e)}"
+            )
+
+    def _enable_buttons(self):
+        """Re-enable payment buttons (only call on error)"""
+        self.btn_twint.setEnabled(True)
+        self.btn_card.setEnabled(True)
+        # Only re-enable pay button if card fields are valid
+        if self.card_frame.isVisible():
+            self._validate_inputs()

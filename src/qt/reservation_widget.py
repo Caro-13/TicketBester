@@ -268,7 +268,7 @@ class ReservationWidget(QWidget):
             self.main_window.reservation_data = reservation_data
 
             # 5. Navigate to seatmap where user will select seats
-            self.main_window.show_seatmap_widget(self.event_id,reservation_data)
+            self.main_window.show_seatmap_widget(reservation_data)
 
         except Exception as e:
             import traceback
@@ -338,17 +338,11 @@ class ReservationWidget(QWidget):
             reservation_data['client_id'] = client_id
             self.main_window.reservation_data = reservation_data
 
-            self.main_window.show_payment_widget(self.event_id, reservation_data)
+            self.main_window.show_payment_widget(reservation_data)
 
         except Exception as e:
             print(f"Error in _go_to_payment: {e}")
             QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
-        '''quantity_tickets = 0
-
-        for tarif in self.tarifs:
-            quantity_tickets +=self.quantity_spinboxes[tarif['name']].value()
-
-        '''#merge conflict --> need to study how to change
 
 
     def _update_total(self):

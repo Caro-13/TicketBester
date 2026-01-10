@@ -1,11 +1,11 @@
 import sys
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-                             QFrame, QGridLayout, QApplication, QScrollArea)
+                             QFrame, QGridLayout, QApplication, QScrollArea, QMessageBox)
 from PyQt6.QtCore import Qt, pyqtSignal
 
 from src.constants import (SEAT_WIDTH,SEAT_HEIGHT,SEAT_GRID_SPACING,SEAT_LARGE_WIDTH,BACK_BTN_WIDTH,CONFIRM_BTN_HEIGHT,SIDE_PANEL_WIDTH)
 
-from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event
+from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event, add_ticket_to_reservation
 
 
 # QPushButton for seats with a style
@@ -31,7 +31,7 @@ class Seat(QPushButton):
         if self.status == 'SOLD':
             # Grey for sold seats
             self.setObjectName("seatSold")
-        elif self.status in ['RESERVED', 'HOLD']:
+        elif self.status == 'RESERVED' :
             # Light purple for reserved/hold seats
             self.setObjectName("seatReserved")
         else:
@@ -108,15 +108,15 @@ class Sector(QFrame):
 
 
 class ConcertHall(QWidget):
-    #def __init__(self, event_id,reservation_data= None , parent=None):#merge conflict --> study how change
-    def __init__(self, event_id, quantity, total_price, parent=None):
+    def __init__(self, reservation_data= None , parent=None):
         super().__init__(parent)
-        self.event_id = event_id
+        self.reservation_data = reservation_data
+        self.event_id = self.reservation_data["event_id"]
+        self.tarifs = self.reservation_data["tarifs"]
+        self.nbr_seat_to_choose = sum(tarif_info['quantity'] for tarif_info in self.tarifs.values())
+        self.total_price = self.reservation_data["total"]
+        self.actual_total_price = self.total_price
 
-        self.nbr_seat_to_choose = quantity
-        self.total_price = total_price
-        self.actual_total_price = total_price
-        #self.reservation_data = reservation_data #merge conflict --> study how change
 
 
 
@@ -124,7 +124,7 @@ class ConcertHall(QWidget):
         self.setStyleSheet("background-color: #1e1e2e;")
 
         # Load seats from database
-        self.seats_data = get_seats_with_status_for_event(event_id)
+        self.seats_data = get_seats_with_status_for_event(self.event_id)
         self._organize_seats_by_sector()
 
         # Main layout
@@ -484,10 +484,77 @@ class ConcertHall(QWidget):
 
     # Send actual price to main.py
     def _on_confirm_clicked(self):
-        main_win = self.window()
+        try:
+            main_win = self.window()
 
-        if hasattr(main_win, 'show_payment_widget'):
-            main_win.show_payment_widget(self.actual_total_price)
+            if not hasattr(main_win, 'show_payment_widget'):
+                QMessageBox.warning(self, "Erreur", "Impossible de continuer au paiement.")
+                return
+
+            # Get selected seats
+            selected_seat_ids = self.get_selected_seats()
+
+            if len(selected_seat_ids) != self.nbr_seat_to_choose:
+                QMessageBox.warning(self, "Erreur", "Veuillez sélectionner tous les sièges requis.")
+                return
+
+            # Get reservation data
+            reservation_id = self.reservation_data.get('reservation_id')
+            event_id = self.reservation_data.get('event_id')
+            tarifs = self.reservation_data.get('tarifs', {})
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Aucune réservation trouvée.")
+                return
+
+            # Create tickets for each selected seat
+            # Match seats to tarifs in order
+            tarif_list = []
+            for tarif_name, tarif_info in tarifs.items():
+                quantity = tarif_info['quantity']
+                for _ in range(quantity):
+                    tarif_list.append(tarif_name)
+
+            # Assign seats to tarifs
+            if len(selected_seat_ids) != len(tarif_list):
+                QMessageBox.warning(self, "Erreur", "Nombre de sièges ne correspond pas aux tarifs.")
+                return
+
+            # Create a ticket for each selected seat
+            for i, seat_id in enumerate(selected_seat_ids):
+                tarif_name = tarif_list[i]
+
+                success = add_ticket_to_reservation(
+                    reservation_id=reservation_id,
+                    event_id=event_id,
+                    seat_id=seat_id,
+                    tarif_name=tarif_name
+                )
+
+                if not success:
+                    QMessageBox.warning(
+                        self,
+                        "Erreur",
+                        f"Impossible d'ajouter le billet pour le siège #{seat_id}."
+                    )
+                    return
+
+            # Update reservation data with actual total (including supplements)
+            self.reservation_data['total'] = self.actual_total_price
+            self.reservation_data['selected_seats'] = selected_seat_ids
+
+
+            main_win.show_payment_widget(self.reservation_data)
+
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _on_confirm_clicked: {e}")
+            print(traceback.format_exc())
+            QMessageBox.critical(
+                self,
+                "Erreur",
+                f"Une erreur est survenue lors de la confirmation: {str(e)}"
+            )
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
