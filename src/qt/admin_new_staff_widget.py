@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-                             QLabel, QLineEdit, QMessageBox, QFormLayout,
-                             QTableWidget, QTableWidgetItem, QHeaderView)
+                             QLabel, QLineEdit, QMessageBox,
+                             QTableWidget, QTableWidgetItem, QHeaderView, QGridLayout)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+
 from src.db.requests import add_staff_member, get_all_staff
 
 
@@ -31,29 +31,29 @@ class AdminNewStaffWidget(QWidget):
 
         # Title
         title = QLabel("Gestion du personnel")
-        title_font = QFont()
-        title_font.setPointSize(24)
-        title_font.setBold(True)
-        title.setFont(title_font)
+        title.setObjectName("pageTitle")
         layout.addWidget(title)
 
         # Add staff section
         add_section = QLabel("Ajouter un nouveau membre")
-        add_section_font = QFont()
-        add_section_font.setPointSize(16)
-        add_section_font.setBold(True)
-        add_section.setFont(add_section_font)
+        add_section.setObjectName("littleSection")
         layout.addWidget(add_section)
 
         # Form
-        form_layout = QFormLayout()
-        form_layout.setSpacing(15)
-        form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+        form_layout = QGridLayout()
+        form_layout.setHorizontalSpacing(20)
+        form_layout.setVerticalSpacing(10)
+
+        name_label = QLabel("Nom complet * :")
+        name_label.setObjectName("infosInput")
 
         self.name_input = QLineEdit()
         self.name_input.setPlaceholderText("Nom complet du membre du personnel")
+        self.name_input.setObjectName("inputLine")
         self.name_input.setMinimumWidth(400)
-        form_layout.addRow("Nom complet *:", self.name_input)
+
+        form_layout.addWidget(name_label, 0, 0, Qt.AlignmentFlag.AlignRight)
+        form_layout.addWidget(self.name_input, 0, 1)
 
         layout.addLayout(form_layout)
 
@@ -62,8 +62,7 @@ class AdminNewStaffWidget(QWidget):
         add_btn_layout.addStretch()
 
         add_btn = QPushButton("Ajouter le membre")
-        add_btn.setFixedWidth(160)
-        add_btn.setObjectName("validateBtn")
+        add_btn.setObjectName("continueBtn")
         add_btn.clicked.connect(self.add_staff_action)
         add_btn_layout.addWidget(add_btn)
 
@@ -74,10 +73,7 @@ class AdminNewStaffWidget(QWidget):
 
         # Staff list section
         list_section = QLabel("Liste du personnel")
-        list_section_font = QFont()
-        list_section_font.setPointSize(16)
-        list_section_font.setBold(True)
-        list_section.setFont(list_section_font)
+        list_section.setObjectName("littleSection")
         layout.addWidget(list_section)
 
         # Staff table
@@ -89,18 +85,10 @@ class AdminNewStaffWidget(QWidget):
         self.staff_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.staff_table.setAlternatingRowColors(True)
         self.staff_table.setMinimumHeight(300)
+        self.staff_table.setShowGrid(False)
+        self.staff_table.verticalHeader().setVisible(False)
+
         layout.addWidget(self.staff_table)
-
-        # Refresh button
-        refresh_layout = QHBoxLayout()
-        refresh_layout.addStretch()
-
-        refresh_btn = QPushButton("🔄 Actualiser")
-        refresh_btn.setFixedWidth(120)
-        refresh_btn.clicked.connect(self.load_staff_list)
-        refresh_layout.addWidget(refresh_btn)
-
-        layout.addLayout(refresh_layout)
 
         self.setLayout(layout)
 
