@@ -408,6 +408,72 @@ def get_need_reservation_for_event(event_id):
         if connection:
             connection.close()
 
+def cancel_reservation(reservation_id):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        # Update reservation status to 'cancelled'
+        # Trigger the sync_seat_with_reservation --> seats to available
+        query = """
+                UPDATE reservation
+                SET status = 'cancelled'
+                WHERE id = %s \
+                  AND status = 'pending' \
+                """
+
+        cursor.execute(query, (reservation_id,))
+        connection.commit()
+
+        cursor.close()
+        return True
+
+    except Exception as e:
+        print(f"Error cancelling reservation: {e}")
+        if connection:
+            connection.rollback()
+        return False
+    finally:
+        if connection:
+            connection.close()
+
+def delete_reservation(reservation_id):
+    connection = None
+    try:
+        connection = _get_connection()
+        cursor = connection.cursor()
+
+        # First delete all tickets associated with this reservation
+        delete_tickets_query = """
+                               DELETE \
+                               FROM ticket
+                               WHERE reservation_id = %s \
+                               """
+        cursor.execute(delete_tickets_query, (reservation_id,))
+
+        delete_reservation_query = """
+                                   DELETE \
+                                   FROM reservation
+                                   WHERE id = %s
+                                     AND status = 'pending' \
+                                   """
+        cursor.execute(delete_reservation_query, (reservation_id,))
+
+        connection.commit()
+        cursor.close()
+
+        print(f"Deleted pending reservation #{reservation_id} and its tickets")
+        return True
+
+    except Exception as e:
+        print(f"Error deleting reservation: {e}")
+        if connection:
+            connection.rollback()
+        return False
+    finally:
+        if connection:
+            connection.close()
 
 """ Admin functions"""
 #event

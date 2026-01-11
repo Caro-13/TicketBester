@@ -6,7 +6,7 @@ from PyQt6.QtGui import QFont, QColor, QBrush
 from src.constants import (CONTINUE_BTN_WIDTH)
 
 from src.db.requests import get_tarifs_for_event, get_need_reservation_for_event, create_client, create_reservation, \
-    get_available_seats_for_event, add_ticket_to_reservation
+    get_available_seats_for_event, add_ticket_to_reservation, cancel_reservation
 
 
 class ReservationWidget(QWidget):
@@ -58,7 +58,7 @@ class ReservationWidget(QWidget):
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_back.setObjectName("backBtn")
 
-        self.btn_back.clicked.connect(self.main_window.show_home_widget)
+        self.btn_back.clicked.connect(self._handle_back)
 
         header_layout.addWidget(self.btn_back)
 
@@ -345,7 +345,6 @@ class ReservationWidget(QWidget):
             print(f"Error in _go_to_payment: {e}")
             QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
 
-
     def _update_total(self):
         total = 0.0
 
@@ -370,3 +369,15 @@ class ReservationWidget(QWidget):
         self.lastname_input.text().strip() != ""
         )
         self.btn_continue.setEnabled(has_tickets and has_identity)
+
+    def _handle_back(self):
+        """If go back to home, delete pending reservation"""
+        if (hasattr(self, 'reservation_data') and
+                self.reservation_data and
+                'reservation_id' in self.reservation_data):
+            reservation_id = self.reservation_data['reservation_id']
+            print(f"Cancelling pending reservation #{reservation_id}")
+            cancel_reservation(reservation_id)
+            self.reservation_data = None
+            self.main_window.show_home_widget()
+        self.main_window.show_home_widget()
