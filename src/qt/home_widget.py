@@ -19,6 +19,15 @@ class HomeWidget(QWidget):
         # --- En-tête (Titre + Bouton) ---
         header_layout = QHBoxLayout()
 
+        # Bouton Retour au launcher
+        self.btn_launcher = QPushButton("← Retour au menu")
+        self.btn_launcher.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_launcher.clicked.connect(self.window().show_launcher_widget)
+        self.btn_launcher.setObjectName("backBtn")
+        header_layout.addWidget(self.btn_launcher)
+
+        header_layout.addStretch()
+
         # Titre
         title = QLabel("Évènements")
         title.setObjectName("pageTitle")

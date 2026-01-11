@@ -17,6 +17,16 @@ class AdminHomeWidget(QWidget):
         layout.setSpacing(30)
         layout.setContentsMargins(50, 50, 50, 50)
 
+        # Back button to launcher
+        back_layout = QHBoxLayout()
+        self.btn_launcher = QPushButton("← Retour au menu")
+        self.btn_launcher.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_launcher.clicked.connect(self.main_window.show_launcher_widget)
+        self.btn_launcher.setObjectName("backBtn")
+        back_layout.addWidget(self.btn_launcher)
+        back_layout.addStretch()
+        layout.addLayout(back_layout)
+
         # Title
         title = QLabel("Administration TicketBester")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
