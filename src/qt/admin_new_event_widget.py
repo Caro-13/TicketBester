@@ -1,13 +1,12 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                              QLabel, QLineEdit, QComboBox, QDateTimeEdit,
-                             QMessageBox, QFormLayout, QScrollArea)
+                             QMessageBox, QFormLayout, QDoubleSpinBox)
 from PyQt6.QtCore import Qt, QDateTime
-from PyQt6.QtGui import QAction, QIcon
 
 from src.constants import (BACK_BTN_WIDTH,CANCEL_BTN_WIDTH,CONTINUE_BTN_WIDTH)
 
 from src.db.requests import create_event, get_all_type_of_event_names, get_all_rooms_names, get_all_config_names, \
-    get_type_id, get_room_id, get_config_id
+    get_type_id, get_room_id, get_config_id, get_type_of_event_details
 
 
 class AdminNewEventWidget(QWidget):
@@ -17,7 +16,7 @@ class AdminNewEventWidget(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Main layout - similar to your other widgets
+        # Main layout
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(30, 30, 30, 30)
         self.layout.setSpacing(20)
@@ -50,6 +49,7 @@ class AdminNewEventWidget(QWidget):
         self.type_combo.model().item(0).setEnabled(False)
         self.type_combo.addItems(get_all_type_of_event_names())
         self.type_combo.setMinimumWidth(400)
+        self.type_combo.currentIndexChanged.connect(self.on_type_changed)
 
         form_layout.addRow("Type d'événement *:", self.type_combo)
 
@@ -104,6 +104,60 @@ class AdminNewEventWidget(QWidget):
         self.layout.addLayout(form_layout)
         self.layout.addSpacing(20)
 
+        # Pricing section (hidden by default)
+        self.pricing_widget = QWidget()
+        pricing_layout = QFormLayout(self.pricing_widget)
+        pricing_layout.setSpacing(15)
+        pricing_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
+
+        # Pricing title
+        pricing_title = QLabel("Tarification")
+        pricing_title.setObjectName("sectionTitle")
+        self.layout.addWidget(pricing_title)
+        pricing_title.hide()
+        self.pricing_title = pricing_title
+
+        # Free event label
+        self.free_label = QLabel("Événement gratuit (0.00 CHF)")
+        self.free_label.setObjectName("infoLabel")
+        self.layout.addWidget(self.free_label)
+        self.free_label.hide()
+
+        # Normal tariff
+        self.normal_price = QDoubleSpinBox()
+        self.normal_price.setPrefix("CHF ")
+        self.normal_price.setDecimals(2)
+        self.normal_price.setMinimum(0.00)
+        self.normal_price.setMaximum(9999.99)
+        self.normal_price.setSingleStep(5.00)
+        self.normal_price.setObjectName("boubleSpinbox")
+        pricing_layout.addRow("Prix Normal *:", self.normal_price)
+
+        # Student tariff
+        self.student_price = QDoubleSpinBox()
+        self.student_price.setPrefix("CHF ")
+        self.student_price.setDecimals(2)
+        self.student_price.setMinimum(0.00)
+        self.student_price.setMaximum(9999.99)
+        self.student_price.setSingleStep(5.00)
+        self.student_price.setObjectName("boubleSpinbox")
+        pricing_layout.addRow("Prix Étudiant *:", self.student_price)
+
+        # Staff tariff
+        self.staff_price = QDoubleSpinBox()
+        self.staff_price.setPrefix("CHF ")
+        self.staff_price.setDecimals(2)
+        self.staff_price.setMinimum(0.00)
+        self.staff_price.setMaximum(9999.99)
+        self.staff_price.setSingleStep(5.00)
+        self.staff_price.setObjectName("boubleSpinbox")
+        pricing_layout.addRow("Prix Staff *:", self.staff_price)
+
+        self.layout.addWidget(self.pricing_widget)
+        self.pricing_widget.hide()
+
+        self.layout.addSpacing(20)
+
         # Required fields note
         note = QLabel("* Champs obligatoires")
         note.setObjectName("startNote")
@@ -132,6 +186,28 @@ class AdminNewEventWidget(QWidget):
         self.layout.addLayout(button_layout)
         self.layout.addStretch()
 
+    def on_type_changed(self, index):
+        """Handle event type selection change."""
+        if index == 0:
+            self.pricing_title.hide()
+            self.free_label.hide()
+            self.pricing_widget.hide()
+            return
+
+        type_name = self.type_combo.currentText().strip()
+        type_details = get_type_of_event_details(type_name)
+
+        if type_details:
+            is_free = type_details.get('is_free', False)
+            self.pricing_title.show()
+
+            if is_free:
+                self.free_label.show()
+                self.pricing_widget.hide()
+            else:
+                self.free_label.hide()
+                self.pricing_widget.show()
+
 
     def create_event_action(self):
         # Validation
@@ -155,6 +231,25 @@ class AdminNewEventWidget(QWidget):
             QMessageBox.warning(self, "Erreur", "La date de fin doit être après la date de début.")
             return
 
+        # Get event type details
+        type_name = self.type_combo.currentText().strip()
+        type_details = get_type_of_event_details(type_name)
+        is_free = type_details.get('is_free', False) if type_details else False
+
+        # Prepare tariffs
+        if is_free:
+            tarifs = [
+                {'name': 'Normal', 'price': 0.00},
+                {'name': 'Student', 'price': 0.00},
+                {'name': 'Staff', 'price': 0.00}
+            ]
+        else:
+            tarifs = [
+                {'name': 'Normal', 'price': self.normal_price.value()},
+                {'name': 'Student', 'price': self.student_price.value()},
+                {'name': 'Staff', 'price': self.staff_price.value()}
+            ]
+
 
         # Create event
         event_name = self.name_input.text().strip()
@@ -171,7 +266,7 @@ class AdminNewEventWidget(QWidget):
         config_name = self.config_combo.currentText().strip()
         config_id = get_config_id(config_name)
 
-        event_id = create_event(event_name, type_id, start_at, end_at, room_id, config_id)
+        event_id = create_event(event_name, type_id, start_at, end_at, room_id, config_id, tarifs)
 
         if event_id:
             QMessageBox.information(
@@ -196,6 +291,12 @@ class AdminNewEventWidget(QWidget):
         self.end_datetime.setDateTime(min_start_at.addSecs(7200))
         self.room_combo.setCurrentIndex(0)
         self.config_combo.setCurrentIndex(0)
+        self.normal_price.setValue(0.00)
+        self.student_price.setValue(0.00)
+        self.staff_price.setValue(0.00)
+        self.pricing_title.hide()
+        self.free_label.hide()
+        self.pricing_widget.hide()
 
     def go_back(self):
         """Return to admin home."""

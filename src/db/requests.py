@@ -526,7 +526,7 @@ def get_config_id(config_name):
         if connection:
             connection.close()
 
-def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on_sale'):
+def create_event(name, type_id, start_at, end_at, room_id, config_id, tarifs, status='on_sale'):
     connection = None
     try:
         connection = _get_connection()
@@ -539,6 +539,16 @@ def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on
                 """
         cursor.execute(query, (type_id, name, start_at, end_at, room_id, config_id, status))
         event_id = cursor.fetchone()[0]
+
+        # Insert tarifs for the event
+        tarif_query = """
+                      INSERT INTO tarif (event_id, name, price)
+                      VALUES (%s, %s, %s) \
+                      """
+        for tarif in tarifs:
+            cursor.execute(tarif_query, (event_id, tarif['name'], tarif['price']))
+
+
         connection.commit()
 
         cursor.close()
@@ -551,6 +561,31 @@ def create_event(name, type_id, start_at, end_at, room_id, config_id, status='on
     finally:
         if connection:
             connection.close()
+
+def get_type_of_event_details(type_name):
+    try:
+        conn = _get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT id, name, is_free, need_reservation
+            FROM type_of_event
+            WHERE name = %s
+        """, (type_name,))
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if result:
+            return {
+                'id': result[0],
+                'name': result[1],
+                'is_free': result[2],
+                'need_reservation': result[3]
+            }
+        return None
+    except Exception as e:
+        print(f"Error getting event type details: {e}")
+        return None
 
 #staff
 def add_staff_member(name):
