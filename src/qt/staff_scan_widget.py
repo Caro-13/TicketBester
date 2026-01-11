@@ -75,10 +75,7 @@ class StaffScanWidget(QWidget):
 
         self.ticket_input = QLineEdit()
         self.ticket_input.setPlaceholderText("Entrez le numéro du billet ou scannez le code-barre...")
-        self.ticket_input.setMinimumHeight(50)
-        input_font = QFont()
-        input_font.setPointSize(14)
-        self.ticket_input.setFont(input_font)
+        self.ticket_input.setObjectName("inputLine")
         self.ticket_input.returnPressed.connect(self.scan_ticket_action)
 
         scan_btn = QPushButton("Scanner")
