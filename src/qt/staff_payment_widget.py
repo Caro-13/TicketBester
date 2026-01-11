@@ -139,7 +139,12 @@ class StaffPaymentWidget(QWidget):
         self.btn_pay_cash = QPushButton(f"Confirmer paiement")
         self.btn_pay_cash.setObjectName("confirmBtn")
         self.btn_pay_cash.setFixedHeight(50)
-        self.btn_pay_cash.setEnabled(False)
+        if self.total_price > 0:
+            self.btn_pay_cash.setEnabled(False)
+        else:
+            self.btn_pay_cash.setEnabled(True)
+            self.btn_pay_cash.setStyleSheet("background-color: #89b4fa; color: #1e1e2e; font-weight: bold;")
+
         self.btn_pay_cash.clicked.connect(self._process_cash_payment)
 
         layout.addSpacing(10)

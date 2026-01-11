@@ -111,7 +111,11 @@ class PaymentWidget(QWidget):
         self.btn_pay = QPushButton(f"Payer {self.total_price:.2f} CHF")
         self.btn_pay.setObjectName("confirmBtn")
         self.btn_pay.setFixedHeight(50)
-        self.btn_pay.setEnabled(False)
+        if self.total_price > 0:
+            self.btn_pay.setEnabled(False)
+        else:
+            self.btn_pay.setEnabled(True)
+            self.btn_pay.setStyleSheet("background-color: #89b4fa; color: #1e1e2e; font-weight: bold;")
         self.btn_pay.clicked.connect(self._process_card_payment)
 
         layout.addSpacing(20)
