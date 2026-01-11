@@ -63,6 +63,8 @@ class AdminStatsWidget(QWidget):
         self.stats_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.stats_table.setAlternatingRowColors(True)
         self.stats_table.setSortingEnabled(True)
+        self.stats_table.setShowGrid(False)
+        self.stats_table.verticalHeader().setVisible(False)
 
         layout.addWidget(self.stats_table)
 
