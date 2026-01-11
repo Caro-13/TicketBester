@@ -227,7 +227,8 @@ class ReservationWidget(QWidget):
             'lastname': self.lastname_input.text().strip(),
             'tarifs': selected_tarifs,
             'total': self.prix_total,
-            'need_reservation': self.need_reservation
+            'need_reservation': self.need_reservation,
+            'vendor_id' : 1
         }
 
     def _handle_continue(self):

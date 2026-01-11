@@ -1,13 +1,12 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-                             QLabel, QLineEdit, QComboBox, QTableWidget,
-                             QTableWidgetItem, QHeaderView, QMessageBox,
-                             QFormLayout, QScrollArea, QSpinBox, QDoubleSpinBox)
+                             QLabel, QComboBox, QMessageBox,
+                            QSpinBox, QFrame, QGridLayout)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+
 from src.db.requests import (get_all_events, get_tarifs_for_event,
-                             get_available_seats_for_event, create_client,
+                             get_available_seats_for_event,
                              create_reservation, add_ticket_to_reservation,
-                             create_payment)
+                             get_need_reservation_for_event)
 
 
 class StaffSellWidget(QWidget):
@@ -15,181 +14,126 @@ class StaffSellWidget(QWidget):
         super().__init__(parent)
         self.main_window = parent
         self.selected_event_id = None
-        self.cart = []  # List of {seat_id, seat_name, tarif_name, price, supplement}
-        self.init_ui()
+        self.selected_event_name = None
+        self.tarifs = []
+        self.prix_total = 0.0
+        self.need_reservation = False
+        self.quantity_spinboxes = {}
+
+        # --- Layout Principal ---
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(50, 50, 50, 50)
+        self.layout.setSpacing(25)
+
+        # --- Titre et Navigation ---
+        self._setup_header()
+
+        # --- Event Selection ---
+        self._setup_event_section()
+
+        # --- Contenu Principal (Tarifs) ---
+        self._setup_tarifs_section()
+
+        # --- Section Récapitulatif et Paiement ---
+        self._setup_footer()
+
+        # Load events
         self.load_events()
 
-    def init_ui(self):
-        # Main scroll area
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-
-        # Content widget
-        content = QWidget()
-        layout = QVBoxLayout()
-        layout.setSpacing(20)
-        layout.setContentsMargins(30, 20, 30, 20)
-
-        # Header
+    def _setup_header(self):
         header_layout = QHBoxLayout()
 
         back_btn = QPushButton("← Retour")
-        back_btn.setFixedWidth(120)
+        back_btn.setObjectName("backBtn")
         back_btn.clicked.connect(self.go_back)
         header_layout.addWidget(back_btn)
 
         header_layout.addStretch()
 
+        # Title
+        title = QLabel("Vendre des billets")
+        title.setObjectName("pageTitle")
+        header_layout.addWidget(title)
+
+        header_layout.addStretch()
+
+        #Staff info
         staff_info = QLabel(f"Personnel: {self.main_window.staff_name or 'Non sélectionné'}")
         staff_info.setStyleSheet("font-weight: bold; color: #4CAF50;")
         header_layout.addWidget(staff_info)
 
-        layout.addLayout(header_layout)
+        self.layout.addLayout(header_layout)
 
-        # Title
-        title = QLabel("Vendre des billets")
-        title_font = QFont()
-        title_font.setPointSize(24)
-        title_font.setBold(True)
-        title.setFont(title_font)
-        layout.addWidget(title)
+    def _setup_event_section(self):
+        content_frame = QFrame()
+        content_layout = QVBoxLayout(content_frame)
+        content_layout.setSpacing(20)
 
-        # Event selection
-        event_layout = QHBoxLayout()
-        event_label = QLabel("Événement:")
-        event_label.setMinimumWidth(100)
+        # Section label
+        event_section = QLabel("Sélectionner l'événement")
+        event_section.setObjectName("littleSection")
+        content_layout.addWidget(event_section)
+
+        # Event selection grid
+        event_grid = QGridLayout()
+        event_grid.setHorizontalSpacing(20)
+        event_grid.setVerticalSpacing(10)
+
+        event_label = QLabel("Événement * :")
+        event_label.setObjectName("infosInput")
         self.event_combo = QComboBox()
         self.event_combo.setMinimumWidth(400)
         self.event_combo.currentIndexChanged.connect(self.on_event_selected)
-        event_layout.addWidget(event_label)
-        event_layout.addWidget(self.event_combo)
-        event_layout.addStretch()
-        layout.addLayout(event_layout)
 
-        # Client information section
-        client_section = QLabel("Informations client")
-        client_font = QFont()
-        client_font.setPointSize(16)
-        client_font.setBold(True)
-        client_section.setFont(client_font)
-        layout.addWidget(client_section)
+        event_grid.addWidget(event_label,0,0,Qt.AlignmentFlag.AlignRight)
+        event_grid.addWidget(self.event_combo,0,1)
 
-        form_layout = QFormLayout()
-        form_layout.setSpacing(10)
+        content_layout.addLayout(event_grid)
+        content_layout.addSpacing(30)
 
-        self.email_input = QLineEdit()
-        self.email_input.setPlaceholderText("client@email.com")
-        form_layout.addRow("Email:", self.email_input)
+        self.layout.addWidget(content_frame)
 
-        self.firstname_input = QLineEdit()
-        self.firstname_input.setPlaceholderText("Prénom")
-        form_layout.addRow("Prénom:", self.firstname_input)
+    def _setup_tarifs_section(self):
+        self.tarifs_frame = QFrame()
+        self.tarifs_content_layout = QVBoxLayout(self.tarifs_frame)
+        self.tarifs_content_layout.setSpacing(20)
 
-        self.lastname_input = QLineEdit()
-        self.lastname_input.setPlaceholderText("Nom")
-        form_layout.addRow("Nom:", self.lastname_input)
+        # --- Tarifs (Grid Layout) ---
+        tarifs_label = QLabel("Sélectionnez les tarifs")
+        tarifs_label.setObjectName("littleSection")
+        self.tarifs_content_layout.addWidget(tarifs_label)
 
-        layout.addLayout(form_layout)
+        self.tarifs_grid = QGridLayout()
+        self.tarifs_grid.setHorizontalSpacing(40)
+        self.tarifs_grid.setVerticalSpacing(15)
 
-        # Ticket selection section
-        ticket_section = QLabel("Sélection des billets")
-        ticket_section.setFont(client_font)
-        layout.addWidget(ticket_section)
+        self.tarifs_content_layout.addLayout(self.tarifs_grid)
+        self.tarifs_content_layout.addStretch()
 
-        selection_layout = QHBoxLayout()
+        # Initially hidden until event is selected
+        self.tarifs_frame.setVisible(False)
+        self.layout.addWidget(self.tarifs_frame)
 
-        # Tarif selection
-        tarif_layout = QVBoxLayout()
-        tarif_label = QLabel("Tarif:")
-        self.tarif_combo = QComboBox()
-        self.tarif_combo.setMinimumWidth(200)
-        tarif_layout.addWidget(tarif_label)
-        tarif_layout.addWidget(self.tarif_combo)
-        selection_layout.addLayout(tarif_layout)
+    def _setup_footer(self):
+        footer_frame = QFrame()
+        footer_frame.setStyleSheet("border-top: 2px solid #313244;")
+        footer_layout = QHBoxLayout(footer_frame)
+        footer_layout.setContentsMargins(0, 15, 0, 0)
 
-        # Seat selection
-        seat_layout = QVBoxLayout()
-        seat_label = QLabel("Place:")
-        self.seat_combo = QComboBox()
-        self.seat_combo.setMinimumWidth(200)
-        seat_layout.addWidget(seat_label)
-        seat_layout.addWidget(self.seat_combo)
-        selection_layout.addLayout(seat_layout)
+        #Total label
+        self.total_label = QLabel(f"Total: {self.prix_total:.2f} CHF")
+        self.total_label.setStyleSheet("font-size: 20px; font-weight: bold; color: #fab387;")
 
-        # Add to cart button
-        add_btn = QPushButton("Ajouter au panier")
-        add_btn.setFixedSize(150, 50)
-        add_btn.clicked.connect(self.add_to_cart)
-        selection_layout.addWidget(add_btn)
-        selection_layout.addStretch()
+        self.btn_continue = QPushButton("Continuer →")
+        self.btn_continue.setObjectName("continueBtn")
+        self.btn_continue.setEnabled(False)
+        self.btn_continue.clicked.connect(self._handle_continue)
 
-        layout.addLayout(selection_layout)
+        footer_layout.addWidget(self.total_label)
+        footer_layout.addStretch()
+        footer_layout.addWidget(self.btn_continue)
 
-        # Cart table
-        cart_label = QLabel("Panier")
-        cart_label.setFont(client_font)
-        layout.addWidget(cart_label)
-
-        self.cart_table = QTableWidget()
-        self.cart_table.setColumnCount(5)
-        self.cart_table.setHorizontalHeaderLabels(["Place", "Tarif", "Prix", "Supplément", "Total"])
-        self.cart_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.cart_table.setMaximumHeight(200)
-        layout.addWidget(self.cart_table)
-
-        # Cart actions
-        cart_actions = QHBoxLayout()
-
-        clear_cart_btn = QPushButton("Vider le panier")
-        clear_cart_btn.clicked.connect(self.clear_cart)
-        cart_actions.addWidget(clear_cart_btn)
-
-        cart_actions.addStretch()
-
-        self.total_label = QLabel("Total: 0.00 CHF")
-        total_font = QFont()
-        total_font.setPointSize(16)
-        total_font.setBold(True)
-        self.total_label.setFont(total_font)
-        cart_actions.addWidget(self.total_label)
-
-        layout.addLayout(cart_actions)
-
-        # Payment section
-        payment_section = QLabel("Paiement")
-        payment_section.setFont(client_font)
-        layout.addWidget(payment_section)
-
-        payment_layout = QHBoxLayout()
-        payment_label = QLabel("Méthode:")
-        self.payment_combo = QComboBox()
-        self.payment_combo.addItems(["Carte bancaire", "Espèces", "Twint"])
-        payment_layout.addWidget(payment_label)
-        payment_layout.addWidget(self.payment_combo)
-        payment_layout.addStretch()
-        layout.addLayout(payment_layout)
-
-        # Confirm sale button
-        confirm_layout = QHBoxLayout()
-        confirm_layout.addStretch()
-
-        confirm_btn = QPushButton("Confirmer la vente")
-        confirm_btn.setFixedSize(200, 50)
-        confirm_btn.setObjectName("validateBtn")
-        confirm_btn.clicked.connect(self.confirm_sale)
-        confirm_layout.addWidget(confirm_btn)
-
-        layout.addLayout(confirm_layout)
-
-        content.setLayout(layout)
-        scroll.setWidget(content)
-
-        # Main layout
-        main_layout = QVBoxLayout()
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(scroll)
-        self.setLayout(main_layout)
+        self.layout.addWidget(footer_frame)
 
     def load_events(self):
         """Load available events."""
@@ -204,164 +148,225 @@ class StaffSellWidget(QWidget):
 
     def on_event_selected(self, index):
         """Handle event selection."""
-        self.selected_event_id = self.event_combo.currentData()
+        event_id  = self.event_combo.currentData()
 
-        if self.selected_event_id:
+        if event_id :
+            self.selected_event_id = event_id
+            self.selected_event_name = self.event_combo.currentText()
+            self.need_reservation = get_need_reservation_for_event(event_id)
             self.load_tarifs()
-            self.load_seats()
+            self.tarifs_frame.setVisible(True)
         else:
-            self.tarif_combo.clear()
-            self.seat_combo.clear()
+            self.selected_event_id = None
+            self.selected_event_name = None
+            self.need_reservation = False
+            self.clear_tarifs()
+            self.tarifs_frame.setVisible(False)
 
     def load_tarifs(self):
-        """Load tarifs for selected event."""
-        if not self.selected_event_id:
-            return
+        try:
+            if self.selected_event_id:
+                self.tarifs = get_tarifs_for_event(self.selected_event_id)
+                self.clear_tarifs()
+                self._populate_tarifs()
+        except Exception as e:
+            print(f"Error loading tarifs: {e}")
+            QMessageBox.warning(self, "Erreur", "Impossible de charger les tarifs.")
 
-        tarifs = get_tarifs_for_event(self.selected_event_id)
-        self.tarif_combo.clear()
-        self.tarif_combo.addItem("-- Sélectionner --", None)
+    def _populate_tarifs(self):
+        """Populate tarif selection grid."""
+        self.quantity_spinboxes = {}
 
-        for tarif in tarifs:
-            display = f"{tarif['name']} - {tarif['price']:.2f} CHF"
-            self.tarif_combo.addItem(display, tarif)
+        for i, tarif in enumerate(self.tarifs):
+            # Tarif name and price
+            price = tarif['price']
+            name_label = QLabel(f"{tarif['name']} ({price:.2f} CHF)")
+            name_label.setObjectName("infosInput")
 
-    def load_seats(self):
-        """Load available seats for selected event."""
-        if not self.selected_event_id:
-            return
+            # Quantity spinbox
+            quantity_box = QSpinBox()
+            quantity_box.setRange(0, 20)
+            quantity_box.setValue(0)
+            quantity_box.setFixedWidth(60)
+            quantity_box.setObjectName("spinbox")
+            quantity_box.valueChanged.connect(self.update_total)
 
-        seats = get_available_seats_for_event(self.selected_event_id)
-        self.seat_combo.clear()
-        self.seat_combo.addItem("-- Sélectionner --", None)
+            self.quantity_spinboxes[tarif['name']] = quantity_box
 
-        for seat in seats:
-            display = f"{seat['name']} ({seat['sector']})"
-            if seat['supplement'] > 0:
-                display += f" +{seat['supplement']:.2f} CHF"
-            self.seat_combo.addItem(display, seat)
+            # Add to grid
+            self.tarifs_grid.addWidget(name_label, i, 0, Qt.AlignmentFlag.AlignLeft)
+            self.tarifs_grid.addWidget(quantity_box, i, 1, Qt.AlignmentFlag.AlignRight)
 
-    def add_to_cart(self):
-        """Add selected ticket to cart."""
-        tarif_data = self.tarif_combo.currentData()
-        seat_data = self.seat_combo.currentData()
+            # Add note for special tarifs
+            if '*' in tarif['name'] or tarif['name'].lower() in ['student', 'staff']:
+                details_label = QLabel("* Contrôle à l'entrée")
+                details_label.setObjectName("starNote")
+                self.tarifs_grid.addWidget(details_label, i, 2, Qt.AlignmentFlag.AlignLeft)
 
-        if not tarif_data or not seat_data:
-            QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un tarif et une place.")
-            return
+    def clear_tarifs(self):
+        """Clear tarif selection."""
+        # Remove all widgets from layout
+        while self.tarifs_grid.count():
+            child = self.tarifs_grid.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
-        # Check if seat already in cart
-        for item in self.cart:
-            if item['seat_id'] == seat_data['id']:
-                QMessageBox.warning(self, "Erreur", "Cette place est déjà dans le panier.")
-                return
+        self.quantity_spinboxes = {}
+        self.update_total()
 
-        cart_item = {
-            'seat_id': seat_data['id'],
-            'seat_name': seat_data['name'],
-            'sector': seat_data['sector'],
-            'tarif_name': tarif_data['name'],
-            'price': tarif_data['price'],
-            'supplement': seat_data['supplement']
+    def update_total(self):
+        """Update total price and enable/disable continue button."""
+        total = 0.0
+        has_tickets = False
+
+        for tarif in self.tarifs:
+            quantity = self.quantity_spinboxes.get(tarif['name'], None)
+            if quantity:
+                total += quantity.value() * tarif['price']
+
+        self.prix_total = total
+        self.total_label.setText(f"Total: {self.prix_total:.2f} CHF")
+        self._update_can_continue()
+
+    def _update_can_continue(self):
+        """Enable/disable continue button."""
+        has_event = self.selected_event_id is not None
+        has_tickets = any(spinbox.value() > 0 for spinbox in self.quantity_spinboxes.values())
+        self.btn_continue.setEnabled(has_event and has_tickets)
+
+    def _get_reservation_data(self):
+        """Collect selected tarifs and quantities."""
+        selected_tarifs = {}
+        for tarif in self.tarifs:
+            quantity = self.quantity_spinboxes[tarif['name']].value()
+            if quantity > 0:
+                selected_tarifs[tarif['name']] = {
+                    'quantity': quantity,
+                    'price': tarif['price'],
+                    'tarif_id': tarif['id']
+                }
+
+        return {
+            'event_id': self.selected_event_id,
+            'event_name': self.selected_event_name,
+            'tarifs': selected_tarifs,
+            'total': self.prix_total,
+            'need_reservation': self.need_reservation,
+            'vendor_id': self.main_window.staff_id
         }
 
-        self.cart.append(cart_item)
-        self.update_cart_display()
+    def _handle_continue(self):
+        """Handle continue button click."""
+        if self.need_reservation:
+            self._go_to_seatmap()
+        else:
+            self._go_to_payment()
 
-    def update_cart_display(self):
-        """Update cart table and total."""
-        self.cart_table.setRowCount(len(self.cart))
-        total = 0
+    def _go_to_seatmap(self):
+        """Navigate to seatmap for seat selection."""
+        try:
+            if not self.selected_event_id:
+                QMessageBox.warning(self, "Erreur", "Veuillez sélectionner un événement.")
+                return
 
-        for row, item in enumerate(self.cart):
-            self.cart_table.setItem(row, 0, QTableWidgetItem(f"{item['seat_name']} ({item['sector']})"))
-            self.cart_table.setItem(row, 1, QTableWidgetItem(item['tarif_name']))
-            self.cart_table.setItem(row, 2, QTableWidgetItem(f"{item['price']:.2f} CHF"))
-            self.cart_table.setItem(row, 3, QTableWidgetItem(f"{item['supplement']:.2f} CHF"))
+            # Get reservation data
+            reservation_data = self._get_reservation_data()
 
-            item_total = item['price'] + item['supplement']
-            total += item_total
-            self.cart_table.setItem(row, 4, QTableWidgetItem(f"{item_total:.2f} CHF"))
+            if not reservation_data['tarifs']:
+                QMessageBox.warning(self, "Erreur", "Veuillez sélectionner au moins un billet.")
+                return
 
-        self.total_label.setText(f"Total: {total:.2f} CHF")
-
-    def clear_cart(self):
-        """Clear all items from cart."""
-        self.cart = []
-        self.update_cart_display()
-
-    def confirm_sale(self):
-        """Process the sale."""
-        # Validation
-        if not self.email_input.text() or not self.firstname_input.text() or not self.lastname_input.text():
-            QMessageBox.warning(self, "Erreur", "Veuillez remplir toutes les informations client.")
-            return
-
-        if not self.cart:
-            QMessageBox.warning(self, "Erreur", "Le panier est vide.")
-            return
-
-        if not self.selected_event_id:
-            QMessageBox.warning(self, "Erreur", "Aucun événement sélectionné.")
-            return
-
-        # Create client
-        client_id = create_client(
-            self.email_input.text(),
-            self.firstname_input.text(),
-            self.lastname_input.text()
-        )
-
-        if not client_id:
-            QMessageBox.critical(self, "Erreur", "Erreur lors de la création du client.")
-            return
-
-        # Create reservation
-        reservation_id = create_reservation(self.selected_event_id, client_id, self.main_window.staff_id)
-
-        if not reservation_id:
-            QMessageBox.critical(self, "Erreur", "Erreur lors de la création de la réservation.")
-            return
-
-        # Add tickets
-        for item in self.cart:
-            success = add_ticket_to_reservation(
-                reservation_id,
-                self.selected_event_id,
-                item['seat_id'],
-                item['tarif_name']
+            # Create reservation with staff_id
+            reservation_id = create_reservation(
+                event_id=self.selected_event_id,
+                client_id=None,
+                vendor_id=self.main_window.staff_id
             )
-            if not success:
-                QMessageBox.critical(self, "Erreur", f"Erreur lors de l'ajout du billet {item['seat_name']}.")
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Erreur lors de la création de la réservation.")
                 return
 
-        # Create payment
-        payment_method_map = {
-            "Carte bancaire": "card",
-            "Espèces": "cash",
-            "Twint": "twint"
-        }
-        payment_method = payment_method_map[self.payment_combo.currentText()]
+            # Add reservation_id and client_id to data
+            reservation_data['reservation_id'] = reservation_id
+            reservation_data['client_id'] = None
 
-        total = sum(item['price'] + item['supplement'] for item in self.cart)
-        payment_id = create_payment(reservation_id, total, payment_method)
+            # Navigate to seatmap
+            self.main_window.show_staff_seatmap_widget(reservation_data)
 
-        if not payment_id:
-            QMessageBox.critical(self, "Erreur", "Erreur lors de la création du paiement.")
-            return
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _go_to_seatmap: {e}")
+            print(traceback.format_exc())
+            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
 
-        QMessageBox.information(
-            self,
-            "Succès",
-            f"Vente confirmée!\n\nRéservation #{reservation_id}\n{len(self.cart)} billet(s) vendu(s)\nTotal: {total:.2f} CHF"
-        )
+        def go_back(self):
+            self.main_window.show_staff_home_widget()
 
-        # Reset form
-        self.clear_cart()
-        self.email_input.clear()
-        self.firstname_input.clear()
-        self.lastname_input.clear()
-        self.load_seats()  # Refresh available seats
+    def _go_to_payment(self):
+        """Navigate directly to payment (for events without seat selection)."""
+        try:
+            # Get reservation data
+            reservation_data = self._get_reservation_data()
+
+            if not reservation_data['tarifs']:
+                QMessageBox.warning(self, "Erreur", "Veuillez sélectionner au moins un billet.")
+                return
+
+            # Create reservation
+            reservation_id = create_reservation(
+                event_id=self.selected_event_id,
+                client_id=None,
+                staff_id=self.main_window.staff_id
+            )
+
+            if not reservation_id:
+                QMessageBox.warning(self, "Erreur", "Impossible de créer la réservation.")
+                return
+
+            # Assign random available seats
+            available_seats = get_available_seats_for_event(self.selected_event_id)
+
+            if not available_seats:
+                QMessageBox.warning(self, "Erreur", "Aucun siège disponible.")
+                return
+
+            # Create tickets for each tarif quantity
+            seat_index = 0
+            for tarif_name, tarif_info in reservation_data['tarifs'].items():
+                quantity = tarif_info['quantity']
+
+                for _ in range(quantity):
+                    if seat_index >= len(available_seats):
+                        QMessageBox.warning(self, "Erreur", "Pas assez de sièges disponibles.")
+                        return
+
+                    seat = available_seats[seat_index]
+                    success = add_ticket_to_reservation(
+                        reservation_id=reservation_id,
+                        event_id=self.selected_event_id,
+                        seat_id=seat['id'],
+                        tarif_name=tarif_name
+                    )
+
+                    if not success:
+                        QMessageBox.warning(self, "Erreur", f"Impossible d'ajouter le billet {seat['name']}.")
+                        return
+
+                    seat_index += 1
+
+            # Add reservation_id and client_id to data
+            reservation_data['reservation_id'] = reservation_id
+            reservation_data['client_id'] = None
+
+            # Navigate to payment
+            self.main_window.show_staff_payment_widget(reservation_data)
+
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _go_to_payment: {e}")
+            print(traceback.format_exc())
+            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
 
     def go_back(self):
         """Return to staff home."""
