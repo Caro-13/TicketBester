@@ -19,6 +19,7 @@ from src.qt.admin_new_event_widget import AdminNewEventWidget
 from src.qt.admin_new_staff_widget import AdminNewStaffWidget
 from src.qt.admin_stats_widget import AdminStatsWidget
 from src.qt.staff_home_widget import StaffHomeWidget
+from src.qt.staff_payment_widget import StaffPaymentWidget
 from src.qt.staff_sell_widget import StaffSellWidget
 from src.qt.staff_scan_widget import StaffScanWidget
 
@@ -228,6 +229,13 @@ class TicketBester(QMainWindow):
         self.current_widget = StaffSellWidget(self)
         self.centralwidget.layout().addWidget(self.current_widget)
         self.setWindowTitle("TicketBester - Vente de billets")
+
+    def show_staff_payment_widget(self, reservation_data):
+        self.clear_central_widget()
+        self.current_widget = StaffPaymentWidget(reservation_data, parent=self)
+        self.centralwidget.layout().addWidget(self.current_widget)
+        total_price = reservation_data['total']
+        self.setWindowTitle(f"TicketBester - Paiement Personnel ({total_price:.2f} CHF)")
 
     def show_staff_scan_widget(self):
         self.clear_central_widget()

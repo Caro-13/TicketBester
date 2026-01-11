@@ -292,7 +292,7 @@ class StaffSellWidget(QWidget):
             reservation_data['client_id'] = None
 
             # Navigate to seatmap
-            self.main_window.show_staff_seatmap_widget(reservation_data)
+            self.main_window.show_seatmap_widget(reservation_data)
 
         except Exception as e:
             import traceback
@@ -317,7 +317,7 @@ class StaffSellWidget(QWidget):
             reservation_id = create_reservation(
                 event_id=self.selected_event_id,
                 client_id=None,
-                staff_id=self.main_window.staff_id
+                vendor_id=self.main_window.staff_id
             )
 
             if not reservation_id:
@@ -355,9 +355,10 @@ class StaffSellWidget(QWidget):
 
                     seat_index += 1
 
-            # Add reservation_id and client_id to data
+            # Add reservation_id, client_id and vendor_id to data
             reservation_data['reservation_id'] = reservation_id
             reservation_data['client_id'] = None
+            reservation_data['vendor_id'] = self.main_window.staff_id
 
             # Navigate to payment
             self.main_window.show_staff_payment_widget(reservation_data)

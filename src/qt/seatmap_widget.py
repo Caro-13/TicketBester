@@ -22,7 +22,7 @@ class Seat(QPushButton):
         self.setCheckable(True)
 
         # Disable if not available
-        if self.status in ['SOLD', 'RESERVED', 'HOLD']:
+        if self.status in ['SOLD', 'RESERVED']:
             self.setEnabled(False)
 
         self.apply_style()
@@ -117,8 +117,7 @@ class ConcertHall(QWidget):
         self.total_price = self.reservation_data["total"]
         self.actual_total_price = self.total_price
 
-
-
+        self.is_staff_sell = reservation_data.get('vendor_id') != 1
 
         self.setWindowTitle("Systeme de Reservation - Salle de Concert")
         self.setStyleSheet("background-color: #1e1e2e;")
@@ -487,9 +486,14 @@ class ConcertHall(QWidget):
         try:
             main_win = self.window()
 
-            if not hasattr(main_win, 'show_payment_widget'):
-                QMessageBox.warning(self, "Erreur", "Impossible de continuer au paiement.")
-                return
+            if self.is_staff_sell:
+                if not hasattr(main_win, 'show_payment_widget'):
+                    QMessageBox.warning(self, "Erreur", "Impossible de continuer au paiement.")
+                    return
+            else:
+                if not hasattr(main_win, 'show_payment_widget'):
+                    QMessageBox.warning(self, "Erreur", "Impossible de continuer au paiement.")
+                    return
 
             # Get selected seats
             selected_seat_ids = self.get_selected_seats()
@@ -543,8 +547,10 @@ class ConcertHall(QWidget):
             self.reservation_data['total'] = self.actual_total_price
             self.reservation_data['selected_seats'] = selected_seat_ids
 
-
-            main_win.show_payment_widget(self.reservation_data)
+            if self.is_staff_sell :
+                main_win.show_staff_payment_widget(self.reservation_data)
+            else :
+                main_win.show_payment_widget(self.reservation_data)
 
         except Exception as e:
             import traceback
