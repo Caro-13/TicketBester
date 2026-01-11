@@ -28,3 +28,9 @@ CREATE TRIGGER trg_sync_seats_on_ticket
 AFTER INSERT ON ticket
 FOR EACH ROW
 EXECUTE FUNCTION sync_seats_with_ticket();
+
+
+CREATE OR REPLACE TRIGGER trg_add_seats_to_event_when_created
+AFTER INSERT ON event
+FOR EACH ROW
+EXECUTE FUNCTION add_seats_to_event_when_created();

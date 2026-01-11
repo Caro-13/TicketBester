@@ -131,3 +131,20 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION add_seats_to_event_when_created()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Insert all seats for the configuration into event_seat
+    INSERT INTO event_seat (event_id, seat_id, status)
+    SELECT NEW.id, s.id, 'AVAILABLE'
+    FROM seat s
+    JOIN sector sec ON s.sector_id = sec.id
+    JOIN config_with_sector cws ON sec.id = cws.sector_id
+    WHERE cws.config_id = NEW.config_id
+      AND s.room_id = NEW.room_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
