@@ -1,8 +1,19 @@
 # TicketBester
+TicketBester is a ticketing management platform (concerts, exhibitions, festivals, theatre) with a local architecture based on Docker and a PyQt6 interface.
+* **Customer**: Ticket purchase and QR code generation (auto-save in `Downloads`).
+* **Staff**: Quick sales at the entrance and validation scanner with anti-fraud check.
+* **Admin**: Event management, staff account creation, and sales/scan statistics.
+
 The semestrial project for the courses 201.2 - Genie Logiciel and 201.3 - Bases de Données Relationnelles at HES-SO Valais/Wallis (HEI).
 
-## Docker Setup
+# UV setup
+To be able to use this software, you will need to first synchronise the venv folder with. This will create the venv folder et download the dependencies.
+``` python
+   uv sync
+```
 
+
+## Docker Setup
 To launch the infrastructure (PostgreSQL + pgAdmin):
 
 1. Make sure **Docker Desktop** is installed and running.
