@@ -46,8 +46,8 @@ class ReservationWidget(QWidget):
             print(f"Error loading tarifs: {e}")
             # Use dummy data on error
             self.tarifs = [
-                {"id": 1, "name": "Normal", "price": 12.00, "discount_percent": None, "discount_code": None},
-                {"id": 2, "name": "Student", "price": 10.00, "discount_percent": None, "discount_code": None},
+                {"id": 1, "name": "Normal", "price": 12.00},
+                {"id": 2, "name": "Student", "price": 10.00},
             ]
 
     def _setup_header(self):

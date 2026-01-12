@@ -96,11 +96,8 @@ def get_tarifs_for_event(event_id):
             SELECT 
                 t.id,
                 t.name,
-                t.price,
-                d.value as discount_percent,
-                d.code as discount_code
+                t.price
             FROM tarif t
-            LEFT JOIN discount d ON t.discount_id = d.id
             WHERE t.event_id = %s
             ORDER BY t.price DESC
         """
@@ -114,8 +111,6 @@ def get_tarifs_for_event(event_id):
                 'id': row[0],
                 'name': row[1],
                 'price': float(row[2]) if row[2] else 0.0,
-                'discount_percent': row[3] if row[3] else 0,
-                'discount_code': row[4] if row[4] else None
             }
             tarifs.append(tarif)
         

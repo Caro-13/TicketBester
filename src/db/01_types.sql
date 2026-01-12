@@ -2,7 +2,7 @@
 CREATE TYPE seat_status AS ENUM (
     'AVAILABLE',
     'RESERVED',
-    --'HOLD',
+    --'HOLD', --removed from project scope
     'SOLD',
     'UNAVAILABLE'
 );
