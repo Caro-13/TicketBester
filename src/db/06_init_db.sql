@@ -763,26 +763,26 @@ INSERT INTO staff (id, name) VALUES
 (2, 'Delta'),
 (3, 'Echo');
 
-INSERT INTO tarif (id, event_id, name, price, discount_id) VALUES--event 1
-(1, 1, 'Normal', 50.00, NULL),
-(2, 1, 'Student', 35.00, NULL),
-(3, 1, 'Staff',25.00,NULL),
+INSERT INTO tarif (id, event_id, name, price) VALUES--event 1
+(1, 1, 'Normal', 50.00),
+(2, 1, 'Student', 35.00),
+(3, 1, 'Staff',25.00),
 -- event 2 free
-(4, 2, 'Normal', 0.00, NULL),
-(5, 2, 'Student', 0.00, NULL),
-(6, 2, 'Staff',0.00,NULL),
+(4, 2, 'Normal', 0.00),
+(5, 2, 'Student', 0.00),
+(6, 2, 'Staff',0.00),
 -- event 3
-(7, 3, 'Normal', 30.00, NULL),
-(8, 3, 'Student', 25.00, NULL),
-(9, 3, 'Staff', 15.00, NULL),
+(7, 3, 'Normal', 30.00),
+(8, 3, 'Student', 25.00),
+(9, 3, 'Staff', 15.00),
 -- event 4 free
-(10, 4, 'Normal', 0.00, NULL),
-(11, 4, 'Student', 0.00, NULL),
-(12, 4, 'Staff',0.00,NULL),
+(10, 4, 'Normal', 0.00),
+(11, 4, 'Student', 0.00),
+(12, 4, 'Staff',0.00),
 -- event 5
-(13, 5, 'Normal', 12.00, NULL),
-(14, 5, 'Student', 10.00, NULL),
-(15, 5, 'Staff', 6.00, NULL);
+(13, 5, 'Normal', 12.00),
+(14, 5, 'Student', 10.00),
+(15, 5, 'Staff', 6.00);
 
 
 
@@ -822,7 +822,6 @@ INSERT INTO ticket (id, reservation_id, event_id, seat_id, tarif_name) VALUES
 -- Reset sequences to avoid conflicts --> assure next id is really the next (max(id)+1)
 SELECT setval('client_id_seq', (SELECT MAX(id) FROM client));
 SELECT setval('staff_id_seq', (SELECT MAX(id) FROM staff));
-SELECT setval('discount_id_seq', (SELECT MAX(id) FROM discount));
 SELECT setval('type_of_seat_id_seq', (SELECT MAX(id) FROM type_of_seat));
 SELECT setval('room_id_seq', (SELECT MAX(id) FROM room));
 SELECT setval('sector_id_seq', (SELECT MAX(id) FROM sector));

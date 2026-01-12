@@ -5,7 +5,8 @@ from PyQt6.QtCore import Qt, pyqtSignal
 
 from src.constants import (SEAT_WIDTH,SEAT_HEIGHT,SEAT_GRID_SPACING,SEAT_LARGE_WIDTH,BACK_BTN_WIDTH,CONFIRM_BTN_HEIGHT,SIDE_PANEL_WIDTH)
 
-from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event, add_ticket_to_reservation
+from src.db.requests import get_seats_with_status_for_event, get_sector_supplements_for_event, \
+    add_ticket_to_reservation, cancel_reservation, delete_reservation
 
 
 # QPushButton for seats with a style
@@ -138,12 +139,22 @@ class ConcertHall(QWidget):
         # Header (Home + Titre)
         header_layout = QHBoxLayout()
 
+        # Back button (to return to tarif selection)
+        self.btn_back = QPushButton("← Tarifs")
+        self.btn_back.setFixedWidth(BACK_BTN_WIDTH)
+        self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_back.setObjectName("backBtn")
+        self.btn_back.clicked.connect(self._handle_back_to_reservation)
+
         # Home button
         self.btn_home = QPushButton("⌂ Home")
         self.btn_home.setFixedWidth(BACK_BTN_WIDTH)
         self.btn_home.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_home.setObjectName("backBtn")
+        self.btn_home.clicked.connect(self._handle_home)
 
+        header_layout.addWidget(self.btn_back)
+        header_layout.addSpacing(10)
         header_layout.addWidget(self.btn_home)
         header_layout.addStretch()
 
@@ -232,10 +243,6 @@ class ConcertHall(QWidget):
 
         # Connections
         self._connect_all_seats()
-
-        # Link for home button
-        if parent and hasattr(parent, 'show_home_widget'):
-            self.btn_home.clicked.connect(parent.show_home_widget)
 
         # Link for confirm button
         if parent and hasattr(parent, 'show_payment_widget'):
@@ -561,6 +568,54 @@ class ConcertHall(QWidget):
                 "Erreur",
                 f"Une erreur est survenue lors de la confirmation: {str(e)}"
             )
+
+    def _handle_home(self):
+        """home --> drop pending reservation"""
+
+        # Get reservation ID and cancel it
+        reservation_id = self.reservation_data.get('reservation_id')
+        if reservation_id:
+            print(f"Cancelling pending reservation #{reservation_id}")
+            cancel_reservation(reservation_id)
+
+        # Get the main window (use window() instead of parent())
+        main_win = self.window()
+
+        if main_win:
+            # Clear the reservation data in main window
+            if hasattr(main_win, 'reservation_data'):
+                main_win.reservation_data = None
+
+            # Navigate to home
+            if hasattr(main_win, 'show_home_widget'):
+                main_win.show_home_widget()
+
+
+    def _handle_back_to_reservation(self):
+        main_win = self.window()
+
+        # Delete the current pending reservation
+        reservation_id = self.reservation_data.get('reservation_id')
+        if reservation_id:
+            print(f"Deleting pending reservation #{reservation_id} (user going back to tarifs)")
+            delete_reservation(reservation_id)
+
+            # Clear reservation data from main window
+            if main_win and hasattr(main_win, 'reservation_data'):
+                main_win.reservation_data = None
+
+        #back to tarifs selection
+        if main_win and hasattr(main_win, 'show_reservation_widget'):
+            # Get event info from current reservation data
+            event_id = self.reservation_data.get('event_id')
+            event_name = self.reservation_data.get('event_name', 'Événement')
+
+            if event_id:
+                main_win.show_reservation_widget(event_id, event_name)
+            else:
+                # Fallback: just go to home if we don't have event info
+                if hasattr(main_win, 'show_home_widget'):
+                    main_win.show_home_widget()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

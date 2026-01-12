@@ -52,7 +52,7 @@ class StaffScanWidget(QWidget):
         door_label.setFont(door_font)
 
         self.door_combo = QComboBox()
-        self.door_combo.addItems(["Porte A", "Porte B", "Porte C", "Porte VIP", "Entrée principale"])
+        self.door_combo.addItems(["Porte A", "Porte B"])
         self.door_combo.setMinimumWidth(200)
 
         door_layout.addWidget(door_label)
@@ -75,10 +75,7 @@ class StaffScanWidget(QWidget):
 
         self.ticket_input = QLineEdit()
         self.ticket_input.setPlaceholderText("Entrez le numéro du billet ou scannez le code-barre...")
-        self.ticket_input.setMinimumHeight(50)
-        input_font = QFont()
-        input_font.setPointSize(14)
-        self.ticket_input.setFont(input_font)
+        self.ticket_input.setObjectName("inputLine")
         self.ticket_input.returnPressed.connect(self.scan_ticket_action)
 
         scan_btn = QPushButton("Scanner")
@@ -139,6 +136,9 @@ class StaffScanWidget(QWidget):
         self.history_table.setMaximumHeight(300)
         self.history_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.history_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.history_table.setShowGrid(False)
+        self.history_table.verticalHeader().setVisible(False)
+
         layout.addWidget(self.history_table)
 
         layout.addStretch()
@@ -164,7 +164,7 @@ class StaffScanWidget(QWidget):
             return
 
         # Get selected door
-        door = self.door_combo.currentText()
+        door = self.door_combo.currentText()[-1]
 
         # Scan the ticket
         result = scan_ticket(ticket_id, self.main_window.staff_id, door)
