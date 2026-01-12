@@ -8,6 +8,7 @@ from PyQt6.QtGui import QFont, QPixmap
 
 # project constants
 from constants import (WINDOW_WIDTH,WINDOW_HEIGHT,MENU_BTN_WIDTH,MENU_BTN_HEIGHT,ICON_WIDTH,ICON_HEIGHT)
+from src.qt.confirmation_widget import ConfirmationWidget
 
 # Import all widgets
 from src.qt.home_widget import HomeWidget
@@ -185,11 +186,16 @@ class TicketBester(QMainWindow):
 
     def show_payment_widget(self,reservation_data):
         self.clear_central_widget()
-        # On crée le widget de paiement avec le prix reçu
         self.current_widget = PaymentWidget(reservation_data,parent=self)
         self.centralwidget.layout().addWidget(self.current_widget)
         total_price = reservation_data['total']
         self.setWindowTitle(f"TicketBester - Paiement ({total_price:.2f} CHF)")
+
+    def show_confirmation_widget(self,reservation_data):
+        self.clear_central_widget()
+        self.current_widget = ConfirmationWidget(reservation_data,parent=self)
+        self.centralwidget.layout().addWidget(self.current_widget)
+        self.setWindowTitle(f"TicketBester - Confirmation réservation")
 
 
     """admin widgets"""

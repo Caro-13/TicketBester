@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt6.QtCore import Qt
 
 from src.db.requests import create_payment
+from src.constants import BACK_BTN_WIDTH
 
 
 class PaymentWidget(QWidget):
@@ -26,9 +27,29 @@ class PaymentWidget(QWidget):
         self.layout.addStretch()
 
     def _setup_header(self):
+        header_layout = QHBoxLayout()
+
+        # btn home
+        self.btn_home = QPushButton("⌂ Home")
+        self.btn_home.setFixedWidth(BACK_BTN_WIDTH)
+        self.btn_home.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_home.setObjectName("backBtn")
+
+        # Link to home
+        if self.main_window and hasattr(self.main_window, 'show_home_widget'):
+            self.btn_home.clicked.connect(self.main_window.show_home_widget)
+
+        header_layout.addWidget(self.btn_home)
+        header_layout.addSpacing(20)  # Petit espace entre le bouton et le titre
+
+        # Title
         title = QLabel(f"Paiement - Total: {self.total_price:.2f} CHF")
         title.setStyleSheet("font-size: 28px; font-weight: bold; color: #fab387;")
-        self.layout.addWidget(title)
+        header_layout.addWidget(title)
+
+        header_layout.addStretch()  # Pousse tout vers la gauche
+
+        self.layout.addLayout(header_layout)
 
     def _setup_payment_options(self):
         self.options_frame = QFrame()
@@ -182,7 +203,7 @@ class PaymentWidget(QWidget):
             )
 
             if self.main_window:
-                self.main_window.show_home_widget()
+                self.main_window.show_confirmation_widget(self.reservation_data)
 
         except Exception as e:
             import traceback
